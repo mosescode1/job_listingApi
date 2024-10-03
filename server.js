@@ -7,14 +7,11 @@ process.on("UncaughtException", (err) => {
   console.log('Uncaught Exception Shutting down');
 
 })
-const app = require('./src/app');
-
-
-
 process.on("ReferenceError", (err) => {
   console.log(err.name, err.message);
   console.log('Reference Error Shutting Down')
 })
+const app = require('./src/app');
 
 const PORT = process.env.PORT || 4001;
 

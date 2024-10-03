@@ -33,6 +33,7 @@ class RedisClient {
     try {
       return await this.client.set(key, value, {
         EX: duration,
+        NX: true
       });
     } catch (err) {
       console.error(`Error setting key ${key}: ${err.message}`);
