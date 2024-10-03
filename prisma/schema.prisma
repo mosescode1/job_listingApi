@@ -1,0 +1,140 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider        = "prisma-client-js"
+  // previewFeatures = ["omitApi"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model JobSeeker {
+  id          String      @id @default(uuid())
+  email       String   @unique
+  password    String
+  firstName   String
+  lastName    String
+  phone       String?  // Optional phone number
+  location    String?  // Optional location
+  bio         String?  // A brief bio or resume summary
+  resumeUrl   String?  // URL to the resume file
+  avatarUrl   String?  // URL to the profile avatar
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  applications Application[]
+
+  Notification Notification[]
+
+  SavedJob SavedJob[]
+}
+
+model Employer {
+  id           String      @id @default(uuid())
+  email        String   @unique
+  password     String
+  companyName  String   // Name of the company posting jobs
+  companyWebsite String? // Optional company website URL
+  location     String?  // Optional location of the company
+  phone        String?  // Optional phone number
+  bio          String?  // Company description
+  avatarUrl    String?  // Company logo or avatar URL
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  jobsPosted   Job[]    @relation("JobsPostedByEmployer")
+}
+
+model Job {
+  id          String      @id @default(uuid())
+  title       String
+  description String
+  category    String   // e.g., "Software", "Marketing"
+  jobType     JobType  // Full-time, Part-time, etc.
+  salaryRange String?  // Optional salary range
+  location    String   // Physical location or "Remote"
+  isRemote    Boolean  @default(false) // Job is remote or not
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  status      JobStatus // Active or Closed
+  employerId  String
+  employer    Employer  @relation("JobsPostedByEmployer", fields: [employerId], references: [id])
+  applications Application[]
+
+  JobCategory JobCategory[]
+
+  SavedJob SavedJob[]
+}
+
+model Application {
+  id           String      @id @default(uuid())
+  coverLetter  String?  // Optional cover letter text
+  resumeUrl    String?  // URL to the resume submitted with the application
+  status       ApplicationStatus @default(Pending) // Application status
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  jobSeekerId  String
+  jobSeeker    JobSeeker @relation(fields: [jobSeekerId], references: [id])
+  jobId        String
+  job          Job       @relation(fields: [jobId], references: [id])
+}
+
+model Admin {
+  id        String      @id @default(uuid())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Optional Models
+
+model JobCategory {
+  id    String    @id @default(uuid())
+  name  String @unique  // e.g., "Software", "Marketing", "Design"
+  jobs  Job[]
+}
+
+model Notification {
+  id        String     @id @default(uuid())
+  message   String
+  isRead    Boolean  @default(false) // Marks if the notification has been read
+  createdAt DateTime @default(now())
+  userId    String
+  jobSeeker JobSeeker @relation(fields: [userId], references: [id])
+}
+
+model SavedJob {
+  id          String      @id @default(uuid())
+  createdAt   DateTime @default(now())
+  jobSeekerId String
+  jobSeeker   JobSeeker @relation(fields: [jobSeekerId], references: [id])
+  jobId       String
+  job         Job       @relation(fields: [jobId], references: [id])
+}
+
+// Enum Definitions
+
+enum JobType {
+  FullTime
+  PartTime
+  Freelance
+  Contract
+  Internship
+}
+
+enum JobStatus {
+  Active
+  Closed
+}
+
+enum ApplicationStatus {
+  Pending
+  Accepted
+  Rejected
+}
