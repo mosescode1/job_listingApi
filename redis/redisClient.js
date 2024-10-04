@@ -6,11 +6,24 @@ class RedisClient {
   }
 
   async connectRedis() {
-    this.client = redis.createClient();
+
+    if (process.env.NODE_ENV === "development") {
+      this.client = await redis.createClient();
+    } else {
+      this.client = redis.createClient(
+        {
+          host: process.env.REDIS_HOST,
+          port: process.env.REDIS_PORT,
+          password: process.env.REDIS_PASSWORD,
+        }
+      );
+    }
+
     this.client.on('error', (err) => console.error('Redis Client Error:', err));
 
     try {
       await this.client.connect(); // Ensure the connection is established
+      console.log("Redis Connected")
     } catch (err) {
       console.error('Error connecting to Redis:', err);
     }

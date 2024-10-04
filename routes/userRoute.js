@@ -6,14 +6,14 @@ const authController = require("../controllers/authController");
 
 router.post("/signup", authController.signUpJobSeeker);
 router.post("/login", authController.loginJobSeeker);
-// router.post("/forgetPassword", authController.forgetPassword);
-// router.post("/resetPassword/:token", authController.resetPassword);
+router.post("/forgetPassword", authController.forgetPassword);
+router.post("/resetPassword/:token", authController.resetPassword);
 
 
 
 
 router
-	.get("/", authController.protect, userController.allJobSeekers)
+	.get("/", userController.allJobSeekers)
 
 // router.route("/:id")
 // 	.get(userController.getUser)
