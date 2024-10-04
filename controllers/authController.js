@@ -76,7 +76,18 @@ const loginJobSeeker = catchAsync(async (req, res, next) => {
 		},
 		select: {
 			password: true,
-			id: true
+			id: true,
+			email: true,
+			firstName: true,
+			lastName: true,
+			phone: true,
+			location: true,
+			bio: true,
+			resumeUrl: true,
+			avatarUrl: true,
+			createdAt: true,
+			updatedAt: true,
+
 		}
 	})
 
@@ -96,7 +107,8 @@ const loginJobSeeker = catchAsync(async (req, res, next) => {
 
 	await redisClient.set(authTokenKey, token, 60 * 60 * 24);
 
-	res.status(200).json({ status: "OK", token })
+	jobSeeker.password = undefined;
+	res.status(200).json({ status: "OK", token, jobSeeker })
 })
 
 
