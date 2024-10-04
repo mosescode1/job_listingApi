@@ -4,7 +4,7 @@ const prisma = require("../prisma/client");
 const argon2 = require("argon2");
 const jwtFeatures = require("../utils/jwtFeature");
 const redisClient = require("../redis/redisClient");
-
+const resetFunc = require("../utils/resetToken");
 
 // ? jOBSEEKER CREATION
 const signUpJobSeeker = catchAsync(async (req, res, next) => {
@@ -122,13 +122,107 @@ const protect = catchAsync(async (req, res, next) => {
 })
 
 
+// ? Forgotten Password
+
 const forgetPassword = catchAsync(async (req, res, next) => {
+	const { email } = req.body;
 
+	if (!email) {
+		return next(new AppError("Please Provide an Email", 404));
+	}
+
+	const user = await prisma.jobSeeker.findUnique({
+		where: {
+			email: email
+		}
+	})
+
+	if (!user) {
+		return next(new AppError("User With this Email doesnot Exist", 404));
+	}
+
+	const resetToken = crypto.randomBytes(32).toString("hex");
+	const token = resetFunc.generateResetToken(resetToken);
+	console.log(user)
+
+	await redisClient.set(`resetToken:${user.id}`, token, 60 * 60);
+
+	const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/user/resetPassword/${resetToken}?user_id=${user.id}`
+
+	res.status(200).json({ status: "success", resetUrl, resetToken });
 })
 
+
+
+// ! RESET PASSWORD
 const resetPassword = catchAsync(async (req, res, next) => {
+	const resetToken = req.params.token;
+	const userId = req.query.user_id;
+	const newPassword = req.body.newPassword;
+	const confirmPassword = req.body.confirmPassword;
 
-})
+	if (!confirmPassword) {
+		return next(new AppError("Please provide a confirm password", 401));
+	}
+
+	if (!newPassword) {
+		return next(new AppError("Please provide a new password", 401));
+	}
+
+	if (newPassword !== confirmPassword) {
+		return next(new AppError("password not Eqaul to confirm password", 401));
+
+	}
+
+	if (!resetToken) {
+		return next(new AppError("No resetToken found", 401));
+	}
+
+	// ! get the reset token
+	const storedHash = await redisClient.get(`resetToken:${userId}`);
+	console.log("storedHash", storedHash);
+
+	if (!storedHash) {
+		return next(new AppError("Reset Token has Expired", 403));
+	}
+
+	// !. verify reset token
+	const verifyToken = resetFunc.verifyResetToken(resetToken, storedHash);
+
+	if (!verifyToken) {
+		return next(new AppError("You Provided an Invalid Reset Token", 403))
+	}
+
+	const user = await prisma.jobSeeker.findUnique({
+		where: {
+			id: userId,
+		}
+	})
+
+	if (!user) {
+		return next(new AppError("User No Longer Available", 404));
+	}
+
+	let hashPassword;
+	try {
+		hashPassword = await argon2.hash(newPassword, { hashLength: 40 });
+	} catch (err) {
+		return next(new AppError(err.message, 404));
+	}
+
+	await prisma.jobSeeker.update({
+		where: {
+			email: user.email,
+		},
+		data: {
+			password: hashPassword,
+		},
+	})
+
+	await redisClient.del(`resetToken:${userId}`)
+
+	res.status(200).json({ status: "success", message: "User Password updated" });
+});
 
 
 // for permission
