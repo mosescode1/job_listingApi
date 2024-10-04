@@ -12,9 +12,9 @@ class RedisClient {
     } else {
       this.client = redis.createClient(
         {
-          host: process.env.REDIS_HOST,
-          port: process.env.REDIS_PORT,
-          password: process.env.REDIS_PASSWORD,
+          host: process.env.REDISHOST,
+          port: process.env.REDISPORT,
+          password: process.env.REDISPASSWORD,
         }
       );
     }
