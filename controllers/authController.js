@@ -5,6 +5,7 @@ const argon2 = require("argon2");
 const jwtFeatures = require("../utils/jwtFeature");
 const redisClient = require("../redis/redisClient");
 const resetFunc = require("../utils/resetToken");
+const crypto = require("crypto");
 
 // ? jOBSEEKER CREATION
 const signUpJobSeeker = catchAsync(async (req, res, next) => {
