@@ -1,11 +1,13 @@
 const catchAsync = require("../../utils/catchAsync");
 const AppError = require("../../utils/AppError");
 const prisma = require("../../prisma/client");
+const ApiFeatures = require("../../utils/apiFeatures");
 
 
 const jobsAll = catchAsync(async (req, res, next) => {
-	const jobs = await prisma.job.findMany({});
 
+	const features = new ApiFeatures(prisma.job, req.query).pagination()
+	const jobs = features.query
 	res.status(200).json({
 		status: "OK",
 		count: jobs.length,

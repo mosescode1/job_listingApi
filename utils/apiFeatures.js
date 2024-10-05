@@ -1,9 +1,15 @@
 class ApiFeatures {
 	constructor(query, queryString) {
+
 		this.query = query;
 		this.queryString = queryString;
 
-		console.log(this.query.findMany())
+	}
+
+	async check() {
+		console.log(this.query)
+		console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+		console.log(await this.query.findMany({}))
 	}
 
 	filter() {
