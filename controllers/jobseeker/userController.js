@@ -2,12 +2,15 @@ const catchAsync = require("../../utils/catchAsync");
 const prisma = require("../../prisma/client");
 const AppError = require("../../utils/AppError");
 const argon2 = require("argon2");
+const ApiFeatures = require("../../utils/apiFeatures");
+
 
 // const ApiFeatures = require("../utils/apiFeatures");
 
 
 const allJobSeekers = catchAsync(async (req, res, next) => {
-	let users = await prisma.jobSeeker.findMany({})
+	const features = new ApiFeatures(req.query).pagination().sorting();
+	let users = await prisma.jobSeeker.findMany(features.queryOptions);
 
 	res.status(200).json({
 		status: "successs",
@@ -48,9 +51,6 @@ const updateProfile = catchAsync(async (req, res, next) => {
 
 
 	const { password, ...rest } = req.body;
-
-
-	console.log(rest);
 
 	let hashPassword;
 	if (password) {

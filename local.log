@@ -1,18 +1,39 @@
 
 
+
+
 (Not all processes could be identified, non-owned process info
  will not be shown, you would have to be root to see it all.)
 (Not all processes could be identified, non-owned process info
  will not be shown, you would have to be root to see it all.)
-Sat Oct 05 2024 15:02:02:973 GMT+0100 (WAT) -- Starting configuration console on http://localhost:45454
-Sat Oct 05 2024 15:02:04:113 GMT+0100 (WAT) -- [INFO] Started the BrowserStack Binary server on 45691, PID: 25925
-Sat Oct 05 2024 15:02:05:114 GMT+0100 (WAT) -- [SUCCESS] You can now access your local server(s) in our remote browser
+(Not all processes could be identified, non-owned process info
+ will not be shown, you would have to be root to see it all.)
+(Not all processes could be identified, non-owned process info
+ will not be shown, you would have to be root to see it all.)
+(Not all processes could be identified, non-owned process info
+ will not be shown, you would have to be root to see it all.)
+(Not all processes could be identified, non-owned process info
+ will not be shown, you would have to be root to see it all.)
+Sat Oct 05 2024 21:55:49:732 GMT+0100 (WAT) -- [ERROR] Necessary ports to start BrowserStack Binary were occupied by PID: -
+Sat Oct 05 2024 21:55:49:732 GMT+0100 (WAT) -- [ERROR] Please ensure that 45691 is available to use
+Sat Oct 05 2024 21:55:49:732 GMT+0100 (WAT) -- [ERROR] SYS_CONFLICT:1001 https://browserstack.com/docs/local-testing/binary/errors/1001
+Sat Oct 05 2024 21:55:49:744 GMT+0100 (WAT) -- [ERROR] Necessary ports to start BrowserStack Binary were occupied by PID: -
+Sat Oct 05 2024 21:55:49:745 GMT+0100 (WAT) -- [ERROR] Please ensure that 45690 is available to use
+Sat Oct 05 2024 21:55:49:745 GMT+0100 (WAT) -- [ERROR] SYS_CONFLICT:1001 https://browserstack.com/docs/local-testing/binary/errors/1001
+Sat Oct 05 2024 21:55:49:753 GMT+0100 (WAT) -- You can learn more about BrowserStack Binary flags by running ./BrowserStackLocal --help
+Sat Oct 05 2024 21:55:49:753 GMT+0100 (WAT) -- You can learn more about BrowserStack Binary flags by running ./BrowserStackLocal --help
+Sat Oct 05 2024 21:55:49:741 GMT+0100 (WAT) -- [ERROR] Necessary ports to start BrowserStack Binary were occupied by PID: -
+Sat Oct 05 2024 21:55:49:741 GMT+0100 (WAT) -- [ERROR] Please ensure that 45691 is available to use
+Sat Oct 05 2024 21:55:49:741 GMT+0100 (WAT) -- [ERROR] SYS_CONFLICT:1001 https://browserstack.com/docs/local-testing/binary/errors/1001
+Sat Oct 05 2024 21:55:49:755 GMT+0100 (WAT) -- [ERROR] Necessary ports to start BrowserStack Binary were occupied by PID: -
+Sat Oct 05 2024 21:55:49:758 GMT+0100 (WAT) -- [ERROR] Please ensure that 45690 is available to use
+Sat Oct 05 2024 21:55:49:758 GMT+0100 (WAT) -- [ERROR] SYS_CONFLICT:1001 https://browserstack.com/docs/local-testing/binary/errors/1001
+Sat Oct 05 2024 21:55:49:766 GMT+0100 (WAT) -- You can learn more about BrowserStack Binary flags by running ./BrowserStackLocal --help
+Sat Oct 05 2024 21:55:49:766 GMT+0100 (WAT) -- You can learn more about BrowserStack Binary flags by running ./BrowserStackLocal --help
+Sat Oct 05 2024 21:55:51:782 GMT+0100 (WAT) -- Starting configuration console on http://localhost:45454
+Sat Oct 05 2024 21:55:53:72 GMT+0100 (WAT) -- [INFO] Started the BrowserStack Binary server on 45691, PID: 6715
+Sat Oct 05 2024 21:55:54:278 GMT+0100 (WAT) -- [SUCCESS] You can now access your local server(s) in our remote browser
 
-Sat Oct 05 2024 15:02:11:540 GMT+0100 (WAT) -- Press Ctrl-C to exit
+Sat Oct 05 2024 21:56:00:256 GMT+0100 (WAT) -- Press Ctrl-C to exit
 
-
-Sat Oct 05 2024 17:08:22:369 GMT+0100 (WAT) --  *** Error: The connection to BrowserStack failed 10 attempts. Please try again.
-
-You need to allow outbound traffic for *.browserstack.com in your corporate firewall to setup local testing.
-For any other problem please contact support@browserstack.com.
 
