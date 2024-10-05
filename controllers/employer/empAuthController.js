@@ -1,27 +1,28 @@
-const catchAsync = require("../utils/catchAsync");
-const AppError = require("../utils/AppError");
-const prisma = require("../prisma/client");
+const catchAsync = require("../../utils/catchAsync");
+const AppError = require("../../utils/AppError");
+const prisma = require("../../prisma/client");
 const argon2 = require("argon2");
-const jwtFeatures = require("../utils/jwtFeature");
-const redisClient = require("../redis/redisClient");
-const resetFunc = require("../utils/resetToken");
+const jwtFeatures = require("../../utils/jwtFeature");
+const redisClient = require("../../redis/redisClient");
+const resetFunc = require("../../utils/resetToken");
 const crypto = require("crypto");
 
-// ? jOBSEEKER CREATION
-const signUpJobSeeker = catchAsync(async (req, res, next) => {
-	const { email, password, firstName, lastName } = req.body;
+// ? EMPLOYER CREATION
+const signUpEmployer = catchAsync(async (req, res, next) => {
+	const { email, password, companyName } = req.body;
 
-	if (!email || !password || !firstName || !lastName) {
+	if (!email || !password || !companyName) {
 		return next(new AppError("Missing Important Fields", 404));
 	}
 
-	const findUser = await prisma.jobSeeker.findUnique({
+	const findEmp = await prisma.employer.findUnique({
 		where: {
 			email: email,
 		},
 	})
-	if (findUser) {
-		return next(new AppError("JobSeeker with this email already exists", 404));
+
+	if (findEmp) {
+		return next(new AppError("Employer with this email already exists", 404));
 	}
 
 	// hashPassword
@@ -32,17 +33,17 @@ const signUpJobSeeker = catchAsync(async (req, res, next) => {
 		return next(new AppError(err.message, 404));
 	}
 
-	const jobSeeker = await prisma.jobSeeker.create({
+	const emp = await prisma.employer.create({
 		data: {
-			firstName,
 			email,
-			lastName,
+			companyName,
 			password: hashPassword,
-			phone: req.body.phone || null,
-			location: req.body.location || null,
-			bio: req.body.bio || null,
-			resumeUrl: req.body.resumeUrl || null,
-			avatarUrl: req.body.avatarUrl || null,
+			companyWebsite: req.body.companyWebsite || null, // Optional company website URL
+			location: req.body.location || null,  // Optional location of the company
+			phone: req.body.phone || null,  // Optional phone number
+			bio: req.body.bio || null,  // Optional Company description
+			avatarUrl: req.body.avatarUrl || null, // Optional avatar
+
 		}
 	})
 
@@ -52,26 +53,26 @@ const signUpJobSeeker = catchAsync(async (req, res, next) => {
 	// await redisClient.set(authTokenKey, token, 60 * 60 * 24);
 
 	// ! hides jobseeker password
-	jobSeeker.password = undefined;
+	emp.password = undefined;
 	res.status(201).json({
 		status: "OK",
 		data: {
-			jobSeeker,
+			employer: emp,
 		},
 		// token
 	})
 })
 
 
-// ? jOBSEEKER LOGIN
-const loginJobSeeker = catchAsync(async (req, res, next) => {
+// ?  LOGIN EMP
+const loginEmp = catchAsync(async (req, res, next) => {
 	const { email, password } = req.body;
 
 	if (!email || !password) {
 		return next(new AppError("Missing Important Fields", 404));
 	}
 
-	const jobSeeker = await prisma.jobSeeker.findUnique({
+	const emp = await prisma.employer.findUnique({
 		where: {
 			email: email
 		},
@@ -79,12 +80,11 @@ const loginJobSeeker = catchAsync(async (req, res, next) => {
 			password: true,
 			id: true,
 			email: true,
-			firstName: true,
-			lastName: true,
-			phone: true,
+			companyName: true,
+			companyWebsite: true,
 			location: true,
+			phone: true,
 			bio: true,
-			resumeUrl: true,
 			avatarUrl: true,
 			createdAt: true,
 			updatedAt: true,
@@ -92,24 +92,25 @@ const loginJobSeeker = catchAsync(async (req, res, next) => {
 		}
 	})
 
-	if (!jobSeeker) {
+	if (!emp) {
 		return next(new AppError(`No user Found with the email: ${email}`, 404));
 	}
 
-	const verified = await argon2.verify(jobSeeker.password, password);
+	const verified = await argon2.verify(emp.password, password);
 
 	if (!verified) {
 		return next(new AppError("Wrong Password", 403))
 	}
 
-	const token = await jwtFeatures.signToken(jobSeeker.id)
+	const token = await jwtFeatures.signToken(emp.id)
 
-	const authTokenKey = `auth:${jobSeeker.id}`;
+	const authTokenKey = `auth:${emp.id}`;
 
 	await redisClient.set(authTokenKey, token, 60 * 60 * 24);
 
-	jobSeeker.password = undefined;
-	res.status(200).json({ status: "OK", token, jobSeeker })
+	//hide password
+	emp.password = undefined;
+	res.status(200).json({ status: "OK", token, data: { employer: emp } });
 })
 
 
@@ -123,14 +124,25 @@ const protect = catchAsync(async (req, res, next) => {
 
 	const decoded = jwtFeatures.verifyToken(token);
 	const authTokenKey = `auth:${decoded.id}`;
-	const redisToken = await redisClient.get(authTokenKey);
 
+	const redisToken = await redisClient.get(authTokenKey);
 	if (!redisToken) {
 		return next(new AppError("Token has expired",))
 	}
 
-	// ! pass the current userId to the next middleware
-	req.userid = decoded.id;
+	try {
+		await prisma.employer.findUniqueOrThrow({
+			where: {
+				id: decoded.id,
+			}
+		})
+	} catch (err) {
+		return next(new AppError("Employer with this token is no longer available", 401))
+	}
+
+
+	// ! pass the current empId to the next middleware
+	req.empId = decoded.id;
 	next()
 })
 
@@ -144,33 +156,32 @@ const forgetPassword = catchAsync(async (req, res, next) => {
 		return next(new AppError("Please Provide an Email", 404));
 	}
 
-	const user = await prisma.jobSeeker.findUnique({
+	const emp = await prisma.employer.findUnique({
 		where: {
 			email: email
 		}
 	})
 
-	if (!user) {
-		return next(new AppError("User With this Email doesnot Exist", 404));
+	if (!emp) {
+		return next(new AppError("emp With this Email doesnot Exist", 404));
 	}
 
 	const resetToken = crypto.randomBytes(32).toString("hex");
 	const token = resetFunc.generateResetToken(resetToken);
-	console.log(user)
 
-	await redisClient.set(`resetToken:${user.id}`, token, 60 * 60);
+	await redisClient.set(`resetToken:${emp.id}`, token, 60 * 60);
 
-	const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/user/resetPassword/${resetToken}?user_id=${user.id}`
+	const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/employer/resetPassword/${resetToken}?emp_id=${emp.id}`
 
 	res.status(200).json({ status: "success", resetUrl, resetToken });
 })
 
 
 
-// ! RESET PASSWORD
+// ? RESET PASSWORD
 const resetPassword = catchAsync(async (req, res, next) => {
 	const resetToken = req.params.token;
-	const userId = req.query.user_id;
+	const empId = req.query.emp_id;
 	const newPassword = req.body.newPassword;
 	const confirmPassword = req.body.confirmPassword;
 
@@ -192,8 +203,7 @@ const resetPassword = catchAsync(async (req, res, next) => {
 	}
 
 	// ! get the reset token
-	const storedHash = await redisClient.get(`resetToken:${userId}`);
-	console.log("storedHash", storedHash);
+	const storedHash = await redisClient.get(`resetToken:${empId}`);
 
 	if (!storedHash) {
 		return next(new AppError("Reset Token has Expired", 403));
@@ -206,14 +216,14 @@ const resetPassword = catchAsync(async (req, res, next) => {
 		return next(new AppError("You Provided an Invalid Reset Token", 403))
 	}
 
-	const user = await prisma.jobSeeker.findUnique({
+	const emp = await prisma.employer.findUnique({
 		where: {
-			id: userId,
+			id: empId,
 		}
 	})
 
-	if (!user) {
-		return next(new AppError("User No Longer Available", 404));
+	if (!emp) {
+		return next(new AppError("Employer No Longer Available", 404));
 	}
 
 	let hashPassword;
@@ -223,22 +233,22 @@ const resetPassword = catchAsync(async (req, res, next) => {
 		return next(new AppError(err.message, 404));
 	}
 
-	await prisma.jobSeeker.update({
+	await prisma.employer.update({
 		where: {
-			email: user.email,
+			email: emp.email,
 		},
 		data: {
 			password: hashPassword,
 		},
 	})
 
-	await redisClient.del(`resetToken:${userId}`)
+	await redisClient.del(`resetToken:${empId}`)
 
 	res.status(200).json({ status: "success", message: "User Password updated" });
 });
 
 
-// for permission
+// ? for permission
 const accessTo = (...roles) => {
 	return (req, res, next) => {
 		if (!roles.includes(req.user.role)) {
@@ -248,9 +258,6 @@ const accessTo = (...roles) => {
 	}
 }
 
-
-
-
 module.exports = {
-	loginJobSeeker, signUpJobSeeker, protect, forgetPassword, resetPassword, accessTo
+	signUpEmployer, loginEmp, protect, forgetPassword, resetPassword, accessTo
 }

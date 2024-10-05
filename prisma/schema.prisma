@@ -52,16 +52,21 @@ model Employer {
 
 model Job {
   id          String      @id @default(uuid())
-  title       String
-  description String
-  category    String   // e.g., "Software", "Marketing"
-  jobType     JobType  // Full-time, Part-time, etc.
-  salaryRange String?  // Optional salary range
-  location    String   // Physical location or "Remote"
-  isRemote    Boolean  @default(false) // Job is remote or not
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  title String
+  company String
+  pay String
+  type JobType // FullTime or PartTime or Freelance or  Contract or Internship
+  aboutCompany String
+  location String
+  shortRoleDescription String
+  fullRoleDescription String
+  keyResponsibility String
+  qualificationAndExperience String
+  methodOfApplication String
+  deadline String
   status      JobStatus // Active or Closed
+  posted DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   employerId  String
   employer    Employer  @relation("JobsPostedByEmployer", fields: [employerId], references: [id])
   applications Application[]
