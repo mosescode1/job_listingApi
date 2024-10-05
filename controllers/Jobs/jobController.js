@@ -6,8 +6,8 @@ const ApiFeatures = require("../../utils/apiFeatures");
 
 const jobsAll = catchAsync(async (req, res, next) => {
 
-	const features = new ApiFeatures(prisma.job, req.query).pagination()
-	const jobs = features.query
+	const features = new ApiFeatures(req.query).pagination().sorting();
+	const jobs = await prisma.job.findMany(features.queryOptions)
 	res.status(200).json({
 		status: "OK",
 		count: jobs.length,
