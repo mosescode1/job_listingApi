@@ -9,12 +9,6 @@ class ApiFeatures {
 		const excludedQuery = ['sort', 'limit', 'page', 'fields'];
 		excludedQuery.forEach(excluded => delete queryObj[excluded]);
 
-		// Prisma filtering: adjust this to match Prisma's operators
-		// if (queryObj.salary) {
-		// 	if (queryObj.salary.gte) this.queryOptions.where = { salary: { gte: queryObj.salary.gte } };
-		// 	// Add more conditions as needed
-		// }
-
 		return this;
 	}
 
@@ -25,7 +19,7 @@ class ApiFeatures {
 			}));
 			this.queryOptions.orderBy = sorting;
 		} else {
-			this.queryOptions.orderBy = { posted: 'asc' }; // Default sorting
+			this.queryOptions.orderBy = { id: 'desc' }; // Default sorting
 		}
 		return this;
 	}

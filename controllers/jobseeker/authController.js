@@ -7,7 +7,7 @@ const redisClient = require("../../redis/redisClient");
 const resetFunc = require("../../utils/resetToken");
 const crypto = require("crypto");
 
-// ? jOBSEEKER CREATION
+// * jOBSEEKER CREATION
 const signUpJobSeeker = catchAsync(async (req, res, next) => {
 	const { email, password, firstName, lastName } = req.body;
 
@@ -15,16 +15,18 @@ const signUpJobSeeker = catchAsync(async (req, res, next) => {
 		return next(new AppError("Missing Important Fields", 404));
 	}
 
+	//  Check if User Already Exists
 	const findUser = await prisma.jobSeeker.findUnique({
 		where: {
 			email: email,
 		},
 	})
+
 	if (findUser) {
 		return next(new AppError("JobSeeker with this email already exists", 404));
 	}
 
-	// hashPassword
+	// Jash User Password
 	let hashPassword;
 	try {
 		hashPassword = await argon2.hash(password, { hashLength: 40 });
@@ -32,6 +34,7 @@ const signUpJobSeeker = catchAsync(async (req, res, next) => {
 		return next(new AppError(err.message, 404));
 	}
 
+	// Create User
 	const jobSeeker = await prisma.jobSeeker.create({
 		data: {
 			firstName,
@@ -46,31 +49,31 @@ const signUpJobSeeker = catchAsync(async (req, res, next) => {
 		}
 	})
 
-	// ! Did this maybe after register route to the dashbord immediately without login
-	// const token = await jwtFeatures.signToken(jobSeeker.id)
-	// const authTokenKey = `auth:${jobSeeker.id}`;
-	// await redisClient.set(authTokenKey, token, 60 * 60 * 24);
 
 	// ! hides jobseeker password
 	jobSeeker.password = undefined;
+	// RESPONSE
 	res.status(201).json({
 		status: "OK",
 		data: {
 			jobSeeker,
 		},
-		// token
 	})
 })
 
 
-// ? jOBSEEKER LOGIN
+
+
+// * jOBSEEKER LOGIN
 const loginJobSeeker = catchAsync(async (req, res, next) => {
 	const { email, password } = req.body;
 
+	// INPUT VALIDATION
 	if (!email || !password) {
 		return next(new AppError("Missing Important Fields", 404));
 	}
 
+	// FIND USER AND RETURN SELECTED FIELDS
 	const jobSeeker = await prisma.jobSeeker.findUnique({
 		where: {
 			email: email
@@ -88,32 +91,82 @@ const loginJobSeeker = catchAsync(async (req, res, next) => {
 			avatarUrl: true,
 			createdAt: true,
 			updatedAt: true,
-
 		}
 	})
 
+	// NO USER == ERROR
 	if (!jobSeeker) {
 		return next(new AppError(`No user Found with the email: ${email}`, 404));
 	}
 
+	// VERIFY PASSWORD
 	const verified = await argon2.verify(jobSeeker.password, password);
-
 	if (!verified) {
 		return next(new AppError("Wrong Password", 403))
 	}
 
 	const token = await jwtFeatures.signToken(jobSeeker.id)
+	const refreshToken = await jwtFeatures.refreshToken(jobSeeker.id);
 
+	// UPDATE REFRESH TOKEN IN THE USER DATABASE
+	await prisma.jobSeeker.update({
+		where: { email: email },
+		data: { refreshToken }
+	});
+
+	// STORE TOKEN IN REDIS
 	const authTokenKey = `auth:${jobSeeker.id}`;
+	await redisClient.set(authTokenKey, token, 60 * 60 * 1);
 
-	await redisClient.set(authTokenKey, token, 60 * 60 * 24);
+	jobSeeker.password = undefined; // Hide password
 
-	jobSeeker.password = undefined;
-	res.status(200).json({ status: "OK", token, data: { jobSeeker } })
+	res.status(200).json({ status: "OK", accessToken: token, refreshToken, data: { jobSeeker } })
 })
 
 
-// ? AUTHENTICATION
+
+// * Logout JobSeeker
+const logoutJobSeeker = catchAsync(async (req, res, next) => {
+	const userId = req.userId;
+
+	// SET REFRESH TOKEN TO NULL
+	await prisma.jobSeeker.update({
+		where: {
+			id: userId,
+		},
+		data: {
+			refreshToken: null
+		}
+	})
+	res.status(200).json({ message: 'Logged out successfully' });
+})
+
+
+
+
+// * NEW TOKEN
+const newTokenGeneration = catchAsync(async (req, res, next) => {
+	// CHECK IF REFRSH TOKEN IS PROVIDED
+	const { refreshToken } = req.body;
+	if (!refreshToken) return res.status(401).json({ message: 'No token provided' });
+
+	// Gets user with That database
+	const user = await prisma.jobSeeker.findFirst({ where: { refreshToken } });
+	if (!user) return res.status(403).json({ message: 'Invalid token' });
+
+
+	// Verify the refresh token
+	const decoded = await jwtFeatures.verifyToken(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+	if (!decoded) return next(new AppError("Refresh Token Expired", 403));
+
+	// Generate a new access token
+	const newAccessToken = jwtFeatures.signToken(user.id);
+	// Send Response
+	res.status(200).json({ accessToken: newAccessToken });
+})
+
+
+// * AUTHENTICATION
 const protect = catchAsync(async (req, res, next) => {
 	if (!req.headers.authorization || !req.headers.authorization.startsWith("Bearer")) {
 		return next(new AppError("Missing Authentication Header", 401));
@@ -145,8 +198,8 @@ const protect = catchAsync(async (req, res, next) => {
 })
 
 
-// ? Forgotten Password
 
+// * Forgotten Password
 const forgetPassword = catchAsync(async (req, res, next) => {
 	const { email } = req.body;
 
@@ -177,7 +230,7 @@ const forgetPassword = catchAsync(async (req, res, next) => {
 
 
 
-// ? RESET PASSWORD
+// * RESET PASSWORD
 const resetPassword = catchAsync(async (req, res, next) => {
 	const resetToken = req.params.token;
 	const userId = req.query.user_id;
@@ -248,7 +301,7 @@ const resetPassword = catchAsync(async (req, res, next) => {
 });
 
 
-// ? for permission
+// * for permission
 const accessTo = (...roles) => {
 	return (req, res, next) => {
 		if (!roles.includes(req.user.role)) {
@@ -262,5 +315,7 @@ const accessTo = (...roles) => {
 
 
 module.exports = {
-	loginJobSeeker, signUpJobSeeker, protect, forgetPassword, resetPassword, accessTo
+	loginJobSeeker, signUpJobSeeker, protect,
+	forgetPassword, resetPassword, accessTo,
+	logoutJobSeeker, newTokenGeneration
 }

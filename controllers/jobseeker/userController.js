@@ -5,9 +5,6 @@ const argon2 = require("argon2");
 const ApiFeatures = require("../../utils/apiFeatures");
 
 
-// const ApiFeatures = require("../utils/apiFeatures");
-
-
 const allJobSeekers = catchAsync(async (req, res, next) => {
 	const features = new ApiFeatures(req.query).pagination().sorting();
 	let users = await prisma.jobSeeker.findMany(features.queryOptions);
@@ -20,6 +17,8 @@ const allJobSeekers = catchAsync(async (req, res, next) => {
 		}
 	})
 })
+
+
 
 const profileMe = catchAsync(async (req, res, next) => {
 	const jobSeeker = await prisma.jobSeeker.findUnique({
@@ -38,6 +37,7 @@ const profileMe = catchAsync(async (req, res, next) => {
 		}
 	})
 })
+
 
 const updateProfile = catchAsync(async (req, res, next) => {
 	const jobSeeker = await prisma.jobSeeker.findUnique({
@@ -80,7 +80,6 @@ const updateProfile = catchAsync(async (req, res, next) => {
 })
 
 const deleteUser = catchAsync(async (req, res, next) => {
-
 	await prisma.jobSeeker.delete({
 		where: {
 			id: req.userId,
@@ -89,6 +88,9 @@ const deleteUser = catchAsync(async (req, res, next) => {
 
 	res.status(204).json({ status: "OK" })
 })
+
+
+
 
 module.exports = {
 	allJobSeekers, profileMe, updateProfile, deleteUser

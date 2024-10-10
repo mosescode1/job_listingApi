@@ -28,11 +28,14 @@ model JobSeeker {
   avatarUrl   String?  // URL to the profile avatar
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  refreshToken String?
+  portfolio   Portfolio[]
+  skills      Skills[]
+  certification Certification[]
   applications Application[]
-
   Notification Notification[]
-
-  SavedJob SavedJob[]
+  SavedJob     SavedJob[]
+  workHistorty WorkHistory[]
 }
 
 model Employer {
@@ -45,6 +48,7 @@ model Employer {
   phone        String?  // Optional phone number
   bio          String?  // Company description
   avatarUrl    String?  // Company logo or avatar URL
+  refreshToken String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   jobsPosted   Job[]    @relation("JobsPostedByEmployer")
@@ -84,10 +88,21 @@ model Application {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   jobSeekerId  String
-  jobSeeker    JobSeeker @relation(fields: [jobSeekerId], references: [id])
+  jobSeeker    JobSeeker @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
   jobId        String
-  job          Job       @relation(fields: [jobId], references: [id])
+  job          Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
 }
+
+
+model WorkHistory{
+  id             String     @id @default(uuid())
+  jobSeekerId    String
+  jobSeeker      JobSeeker @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
+  startDate String
+  endDate String
+  certification   String
+}
+
 
 model Admin {
   id        String      @id @default(uuid())
@@ -98,7 +113,6 @@ model Admin {
 }
 
 // Optional Models
-
 model JobCategory {
   id    String    @id @default(uuid())
   name  String @unique  // e.g., "Software", "Marketing", "Design"
@@ -122,6 +136,33 @@ model SavedJob {
   jobId       String
   job         Job       @relation(fields: [jobId], references: [id])
 }
+
+
+model Portfolio {
+  id             String     @id @default(uuid())
+  jobSeekerId   String
+  portfolioName  String
+  portfolioDesc  String
+  cover_url      String
+  jobSeeker      JobSeeker  @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
+}
+
+model Skills {
+  id             String     @id @default(uuid())
+  jobSeekerId   String
+  skillsName  String
+  range     Int
+  jobSeeker      JobSeeker  @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
+}
+
+model Certification{
+  id             String     @id @default(uuid())
+  jobSeekerId    String
+  jobSeeker      JobSeeker @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
+  certificationYear String
+  certification   String
+}
+
 
 // Enum Definitions
 

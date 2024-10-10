@@ -8,16 +8,20 @@ router.post("/signup", empAuthController.signUpEmployer);
 router.post("/login", empAuthController.loginEmp);
 router.post("/forgetPassword", empAuthController.forgetPassword);
 router.post("/resetPassword/:token", empAuthController.resetPassword);
+router.post("/refresh", empAuthController.newTokenGeneration);
+router.get("/logout", empAuthController.protect, empAuthController.logoutEmployer);
 
 
 
-
+// EMP Profile
 router
 	.get("/", empController.allEmployers)
 	.get("/profile", empAuthController.protect, empController.profileMe)
 	.patch("/profile", empAuthController.protect, empController.updateProfile)
 	.delete("/profile", empAuthController.protect, empController.deleteUser);
 
+
+// Employer JOB OPERATIONS
 router
 	.post("/job", empAuthController.protect, empController.createJob)
 	.get("/job", empAuthController.protect, empController.empJobs)

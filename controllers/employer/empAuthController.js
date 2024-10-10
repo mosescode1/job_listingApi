@@ -7,7 +7,7 @@ const redisClient = require("../../redis/redisClient");
 const resetFunc = require("../../utils/resetToken");
 const crypto = require("crypto");
 
-// ? EMPLOYER CREATION
+// * EMPLOYER CREATION
 const signUpEmployer = catchAsync(async (req, res, next) => {
 	const { email, password, companyName } = req.body;
 
@@ -64,7 +64,7 @@ const signUpEmployer = catchAsync(async (req, res, next) => {
 })
 
 
-// ?  LOGIN EMP
+// *  LOGIN EMP
 const loginEmp = catchAsync(async (req, res, next) => {
 	const { email, password } = req.body;
 
@@ -102,11 +102,16 @@ const loginEmp = catchAsync(async (req, res, next) => {
 		return next(new AppError("Wrong Password", 403))
 	}
 
-	const token = await jwtFeatures.signToken(emp.id)
+	const token = await jwtFeatures.signToken(emp.id);
+	const refreshToken = await jwtFeatures.refreshToken(emp.id);
+
+	await prisma.employer.update({
+		where: { email: email },
+		data: { refreshToken }
+	});
 
 	const authTokenKey = `auth:${emp.id}`;
-
-	await redisClient.set(authTokenKey, token, 60 * 60 * 24);
+	await redisClient.set(authTokenKey, token, 60 * 60);
 
 	//hide password
 	emp.password = undefined;
@@ -114,7 +119,49 @@ const loginEmp = catchAsync(async (req, res, next) => {
 })
 
 
-// ? AUTHENTICATION
+// * Logout Employer
+const logoutEmployer = catchAsync(async (req, res, next) => {
+	const empId = req.empId;
+
+	if (!empId) {
+		return next(new AppError("Missing Employer Id", 404));
+	}
+
+	// SET REFRESH TOKEN TO NULL
+	await prisma.jobSeeker.update({
+		where: {
+			id: empId,
+		},
+		data: {
+			refreshToken: null
+		}
+	})
+
+	res.status(200).json({ message: 'Logged out successfully' });
+})
+
+// * NEW TOKEN
+const newTokenGeneration = catchAsync(async (req, res, next) => {
+	// CHECK IF REFRSH TOKEN IS PROVIDED
+	const { refreshToken } = req.body;
+	if (!refreshToken) return res.status(401).json({ message: 'No token provided' });
+
+	// Gets user with That database
+	const user = await prisma.employer.findFirst({ where: { refreshToken } });
+	if (!user) return res.status(403).json({ message: 'Invalid token' });
+
+
+	// Verify the refresh token
+	const decoded = await jwtFeatures.verifyToken(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+	if (!decoded) return next(new AppError("Refresh Token Expired", 403));
+
+	// Generate a new access token
+	const newAccessToken = jwtFeatures.signToken(user.id);
+	// Send Response
+	res.status(200).json({ accessToken: newAccessToken });
+})
+
+// * AUTHENTICATION
 const protect = catchAsync(async (req, res, next) => {
 	if (!req.headers.authorization || !req.headers.authorization.startsWith("Bearer")) {
 		return next(new AppError("Missing Authentication Header", 403));
@@ -147,7 +194,7 @@ const protect = catchAsync(async (req, res, next) => {
 })
 
 
-// ? Forgotten Password
+// * Forgotten Password
 
 const forgetPassword = catchAsync(async (req, res, next) => {
 	const { email } = req.body;
@@ -178,7 +225,7 @@ const forgetPassword = catchAsync(async (req, res, next) => {
 
 
 
-// ? RESET PASSWORD
+// * RESET PASSWORD
 const resetPassword = catchAsync(async (req, res, next) => {
 	const resetToken = req.params.token;
 	const empId = req.query.emp_id;
@@ -248,7 +295,7 @@ const resetPassword = catchAsync(async (req, res, next) => {
 });
 
 
-// ? for permission
+// * for permission
 const accessTo = (...roles) => {
 	return (req, res, next) => {
 		if (!roles.includes(req.user.role)) {
@@ -259,5 +306,6 @@ const accessTo = (...roles) => {
 }
 
 module.exports = {
-	signUpEmployer, loginEmp, protect, forgetPassword, resetPassword, accessTo
+	signUpEmployer, loginEmp, protect, forgetPassword,
+	resetPassword, accessTo, newTokenGeneration, logoutEmployer
 }
