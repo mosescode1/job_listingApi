@@ -48,8 +48,8 @@ const signUpJobSeeker = catchAsync(async (req, res, next) => {
 			resumeUrl: req.body.resumeUrl || null,
 			avatarUrl: req.body.avatarUrl || null,
 
-			address: req.body.address?.length ? {
-				create: { ...req.body.address }
+			address: req.body.address ? {
+				create: req.body.address
 			} : undefined,  // Handle null or empty array
 
 			experience: req.body.experience?.length ? {

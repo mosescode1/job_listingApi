@@ -25,16 +25,21 @@ const limiter = rateLimit({
 app.use(limiter);
 // Handler for Errors
 // * Routes
+// app.use("/", (req, res) => {
+//   res.status(200).json({
+//     message: "Ok",
+//   })
+// })
 app.use('/api/v1/status', serverStats);
 app.use('/api/v1/user', userRouter);
 app.use('/api/v1/employer', empRoute);
 app.use('/api/v1/job', jobRoute);
 
-app.use(globalError);
 // Handling undefined Routes
 app.use('*', (req, res, next) => {
   next(new AppError(`Route Not Found ${req.originalUrl}`, 404));
 });
+app.use(globalError);
 
 
 module.exports = app;
