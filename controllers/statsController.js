@@ -3,7 +3,6 @@ const redisClient = require('../redis/redisClient');
 const prisma = require("../prisma/client");
 
 const status = catchAsync(async (req, res, next) => {
-  console.log(redisClient.isAlive());
   const redisStatus = redisClient.isAlive();
   const serverStatus = 'online';
   let prismaStatus;

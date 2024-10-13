@@ -9,9 +9,9 @@ const crypto = require("crypto");
 
 // * jOBSEEKER CREATION
 const signUpJobSeeker = catchAsync(async (req, res, next) => {
-	const { email, password, firstName, lastName } = req.body;
+	const { email, password, firstName, lastName, phone, gender, address, jobTitle } = req.body;
 
-	if (!email || !password || !firstName || !lastName) {
+	if (!email || !password || !firstName || !lastName || !phone || !gender || !address || !jobTitle) {
 		return next(new AppError("Missing Important Fields", 404));
 	}
 
@@ -40,19 +40,44 @@ const signUpJobSeeker = catchAsync(async (req, res, next) => {
 			firstName,
 			email,
 			lastName,
+			phone,
+			jobTitle,
+			cv: req.body.cv || null,
 			password: hashPassword,
-			phone: req.body.phone || null,
-			location: req.body.location || null,
 			bio: req.body.bio || null,
 			resumeUrl: req.body.resumeUrl || null,
 			avatarUrl: req.body.avatarUrl || null,
-		}
-	})
 
+			address: req.body.address?.length ? {
+				create: { ...req.body.address }
+			} : undefined,  // Handle null or empty array
+
+			experience: req.body.experience?.length ? {
+				create: req.body.experience
+			} : undefined,
+
+			education: req.body.education?.length ? {
+				create: req.body.education
+			} : undefined,
+
+			portfolio: req.body.portfolio?.length ? {
+				create: req.body.portfolio
+			} : undefined,
+
+			certification: req.body.certification?.length ? {
+				create: req.body.certification
+			} : undefined,  // Fixed to include `create`
+
+			skills: req.body.skills?.length ? {
+				create: req.body.skills
+			} : undefined
+		}
+	});
 
 	// ! hides jobseeker password
 	jobSeeker.password = undefined;
 	// RESPONSE
+
 	res.status(201).json({
 		status: "OK",
 		data: {
@@ -82,10 +107,11 @@ const loginJobSeeker = catchAsync(async (req, res, next) => {
 			password: true,
 			id: true,
 			email: true,
+			jobTitle: true,
+			cv: true,
 			firstName: true,
 			lastName: true,
 			phone: true,
-			location: true,
 			bio: true,
 			resumeUrl: true,
 			avatarUrl: true,

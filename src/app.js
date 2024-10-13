@@ -23,18 +23,18 @@ const limiter = rateLimit({
 
 // Apply the rate limiter to all requests
 app.use(limiter);
+// Handler for Errors
 // * Routes
 app.use('/api/v1/status', serverStats);
 app.use('/api/v1/user', userRouter);
 app.use('/api/v1/employer', empRoute);
 app.use('/api/v1/job', jobRoute);
 
+app.use(globalError);
 // Handling undefined Routes
 app.use('*', (req, res, next) => {
   next(new AppError(`Route Not Found ${req.originalUrl}`, 404));
 });
 
-// Handler for Errors
-app.use(globalError);
 
 module.exports = app;

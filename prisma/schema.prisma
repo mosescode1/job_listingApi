@@ -15,29 +15,115 @@ datasource db {
 }
 
 
+
+// * JOBSEEKER MODEL
 model JobSeeker {
   id          String      @id @default(uuid())
   email       String   @unique
   password    String
   firstName   String
   lastName    String
-  phone       String?  // Optional phone number
-  location    String?  // Optional location
+  jobTitle    String
+  phone       String
+  cv          String?
+  gender      Gender @default(Others)
   bio         String?  // A brief bio or resume summary
   resumeUrl   String?  // URL to the resume file
   avatarUrl   String?  // URL to the profile avatar
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   refreshToken String?
+  address     JobSeekerAddress? // one user one address information
+  education   Education[]
+  experience  Experience[]
   portfolio   Portfolio[]
   skills      Skills[]
   certification Certification[]
   applications Application[]
-  Notification Notification[]
-  SavedJob     SavedJob[]
-  workHistorty WorkHistory[]
+  notification Notification[]
+  savedJob     SavedJob[]
 }
 
+model JobSeekerAddress{
+  id          String      @id @default(uuid())
+  country     String
+  city        String
+  state       String
+  addressLine String
+  jobSeeker      JobSeeker  @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
+  jobSeekerId String @unique
+}
+
+model Experience{
+  id             String     @id @default(uuid())
+  companyName    String
+  jobTitle       String
+  description    String
+  startDate      DateTime
+  endDate        DateTime
+  jobSeekerId    String
+  jobSeeker      JobSeeker @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
+}
+
+model Education{
+  id          String      @id @default(uuid())
+  school      String
+  degree      String
+  fieldOfStudy String
+  jobSeekerId String
+  jobSeeker      JobSeeker  @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
+}
+model Skills {
+  id             String     @id @default(uuid())
+  value          String
+  label          String
+  jobSeekerId   String
+  jobSeeker      JobSeeker  @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
+}
+model Portfolio {
+  id            String     @id @default(uuid())
+  description     String
+  link  String
+  jobSeekerId   String
+  jobSeeker      JobSeeker  @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
+}
+
+model Certification{
+  id             String     @id @default(uuid())
+  title          String
+  link           String
+  date           DateTime
+  jobSeekerId    String
+  jobSeeker      JobSeeker @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
+}
+
+// * Optional Models
+model JobCategory {
+  id    String    @id @default(uuid())
+  name  String @unique  // e.g., "Software", "Marketing", "Design"
+  jobs  Job[]
+}
+
+model Notification {
+  id        String     @id @default(uuid())
+  message   String
+  isRead    Boolean  @default(false) // Marks if the notification has been read
+  createdAt DateTime @default(now())
+  userId    String
+  jobSeeker JobSeeker @relation(fields: [userId], references: [id])
+}
+
+model SavedJob {
+  id          String      @id @default(uuid())
+  createdAt   DateTime @default(now())
+  jobSeekerId String
+  jobSeeker   JobSeeker @relation(fields: [jobSeekerId], references: [id])
+  jobId       String
+  job         Job       @relation(fields: [jobId], references: [id])
+}
+
+
+// * EMPLOYER MODEL AND JOB CREATION
 model Employer {
   id           String      @id @default(uuid())
   email        String   @unique
@@ -80,6 +166,7 @@ model Job {
   SavedJob SavedJob[]
 }
 
+
 model Application {
   id           String      @id @default(uuid())
   coverLetter  String?  // Optional cover letter text
@@ -93,17 +180,7 @@ model Application {
   job          Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
 }
 
-
-model WorkHistory{
-  id             String     @id @default(uuid())
-  jobSeekerId    String
-  jobSeeker      JobSeeker @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
-  startDate String
-  endDate String
-  certification   String
-}
-
-
+// * ADMIN MODEL
 model Admin {
   id        String      @id @default(uuid())
   email     String   @unique
@@ -112,59 +189,13 @@ model Admin {
   updatedAt DateTime @updatedAt
 }
 
-// Optional Models
-model JobCategory {
-  id    String    @id @default(uuid())
-  name  String @unique  // e.g., "Software", "Marketing", "Design"
-  jobs  Job[]
-}
-
-model Notification {
-  id        String     @id @default(uuid())
-  message   String
-  isRead    Boolean  @default(false) // Marks if the notification has been read
-  createdAt DateTime @default(now())
-  userId    String
-  jobSeeker JobSeeker @relation(fields: [userId], references: [id])
-}
-
-model SavedJob {
-  id          String      @id @default(uuid())
-  createdAt   DateTime @default(now())
-  jobSeekerId String
-  jobSeeker   JobSeeker @relation(fields: [jobSeekerId], references: [id])
-  jobId       String
-  job         Job       @relation(fields: [jobId], references: [id])
-}
-
-
-model Portfolio {
-  id             String     @id @default(uuid())
-  jobSeekerId   String
-  portfolioName  String
-  portfolioDesc  String
-  cover_url      String
-  jobSeeker      JobSeeker  @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
-}
-
-model Skills {
-  id             String     @id @default(uuid())
-  jobSeekerId   String
-  skillsName  String
-  range     Int
-  jobSeeker      JobSeeker  @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
-}
-
-model Certification{
-  id             String     @id @default(uuid())
-  jobSeekerId    String
-  jobSeeker      JobSeeker @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
-  certificationYear String
-  certification   String
-}
-
-
 // Enum Definitions
+
+enum Gender {
+  Male
+  Female
+  Others
+}
 
 enum JobType {
   FullTime

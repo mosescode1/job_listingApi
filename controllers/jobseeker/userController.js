@@ -24,6 +24,17 @@ const profileMe = catchAsync(async (req, res, next) => {
 	const jobSeeker = await prisma.jobSeeker.findUnique({
 		where: {
 			id: req.userId,
+		},
+		omit: {
+			refreshToken: true,
+		},
+		include: {
+			address: true,
+			skills: true,
+			portfolio: true,
+			certification: true,
+			experience: true,
+			education: true,
 		}
 	})
 	if (!jobSeeker) {
