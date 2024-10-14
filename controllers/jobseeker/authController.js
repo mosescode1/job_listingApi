@@ -11,8 +11,16 @@ const crypto = require("crypto");
 const signUpJobSeeker = catchAsync(async (req, res, next) => {
 	const { email, password, firstName, lastName, phone, gender, address, jobTitle } = req.body;
 
-	if (!email || !password || !firstName || !lastName || !phone || !gender || !address || !jobTitle) {
-		return next(new AppError("Missing Important Fields", 404));
+	if (!email || !password) {
+		return next(new AppError("Email or Password Missing", 404));
+	}
+
+	if (!firstName || !lastName) {
+		return next(new AppError("firstName and lastName Missing", 404))
+	}
+
+	if (!phone || !gender || !address || !jobTitle) {
+		return next(new AppError("phone , address, gender, or jobTitle Missing", 404))
 	}
 
 	//  Check if User Already Exists

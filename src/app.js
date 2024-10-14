@@ -25,11 +25,6 @@ const limiter = rateLimit({
 app.use(limiter);
 // Handler for Errors
 // * Routes
-// app.use("/", (req, res) => {
-//   res.status(200).json({
-//     message: "Ok",
-//   })
-// })
 app.use('/api/v1/status', serverStats);
 app.use('/api/v1/user', userRouter);
 app.use('/api/v1/employer', empRoute);
