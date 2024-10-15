@@ -49,16 +49,24 @@ const jobApply = catchAsync(async (req, res, next) => {
 	const userId = req.userId;
 	const jobId = req.params.jobId;
 
+	const { name, email, proposal, coverLetter } = req.body
+
 
 	if (!userId || !jobId) {
 		return next(new AppError("Missing Required Fields", 404));
 	}
 
+	if (!name || !email || !proposal || !coverLetter) {
+		return next(new AppError("Missing name, email or proposal or coverLetter", 404));
+	}
+
 
 	const appliedJob = await prisma.application.create({
 		data: {
-			coverLetter: req.body.coverLetter || null,
-			resumeUrl: req.body.resumeUrl || null,
+			name,
+			email,
+			coverLetter,
+			proposal,
 			jobSeekerId: userId,
 			jobId: jobId,
 		}

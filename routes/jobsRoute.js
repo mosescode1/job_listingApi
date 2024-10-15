@@ -8,7 +8,7 @@ const authController = require("../controllers/jobseeker/authController");
 router
 	.get("/", jobController.jobsAll)
 	.get("/:jobId", jobController.jobById)
-	.get("/:jobId/apply", authController.protect, jobController.jobApply) // JOB APPLICATION
+	.post("/:jobId/apply", authController.protect, jobController.jobApply) // JOB APPLICATION
 
 
 

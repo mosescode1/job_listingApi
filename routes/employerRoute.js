@@ -28,6 +28,7 @@ router
 	.get("/job/:jobId", empAuthController.protect, empController.singleJob)
 	.patch("/job/:jobId", empAuthController.protect, empController.updateJob)
 	.delete("/job/:jobId", empAuthController.protect, empController.deleteJob)
+	.get("/job/:jobId/applications", empAuthController.protect, empController.jobApplication)
 
 
 

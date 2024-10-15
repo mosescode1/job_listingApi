@@ -169,8 +169,10 @@ model Job {
 
 model Application {
   id           String      @id @default(uuid())
-  coverLetter  String?  // Optional cover letter text
-  resumeUrl    String?  // URL to the resume submitted with the application
+  name         String
+  email        String
+  proposal     String
+  coverLetter  String
   status       ApplicationStatus @default(Pending) // Application status
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -178,6 +180,7 @@ model Application {
   jobSeeker    JobSeeker @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
   jobId        String
   job          Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
 }
 
 // * ADMIN MODEL

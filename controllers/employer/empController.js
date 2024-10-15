@@ -227,8 +227,37 @@ const deleteJob = catchAsync(async (req, res, next) => {
 	})
 })
 
+
+const jobApplication = catchAsync(async (req, res, next) => {
+	const jobId = req.params.jobId;
+	const empId = req.empId;
+
+
+	const allApplications = await prisma.employer.findUnique({
+		where: {
+			id: empId,
+		},
+		select: {
+			jobsPosted: {
+				where: {
+					id: jobId
+				},
+				select: {
+					applications: true
+				},
+			}
+		}
+	});
+
+	res.status(200).json({
+		status: "OK",
+		data: allApplications
+	})
+
+})
+
 module.exports = {
 	allEmployers, profileMe, updateProfile,
 	deleteUser, createJob, empJobs, updateJob,
-	deleteJob, singleJob
+	deleteJob, singleJob, jobApplication
 }
