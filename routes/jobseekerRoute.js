@@ -1,23 +1,49 @@
 const express = require("express");
 const router = express.Router();
-const userController = require("../controllers/jobseeker/userController");
-const authController = require("../controllers/jobseeker/authController");
+const authenticate = require("../middleware/authenticate");
+const JobSeekerAuthController = require("../controllers/auth/job-seeker-auth");
+const JobSeekerController = require("../controllers/jobseeker");
+const catchAsync = require("../utils/catchAsync");
 
 // AUTH
-router.post("/signup", authController.signUpJobSeeker);
-router.post("/login", authController.loginJobSeeker);
-router.post("/forgetPassword", authController.forgetPassword);
-router.post("/resetPassword/:token", authController.resetPassword);
-router.post("/refresh", authController.newTokenGeneration)
-router.get("/logout", authController.protect, authController.logoutJobSeeker);
+router.post("/signup", catchAsync(JobSeekerAuthController.signup));
+router.post("/login", catchAsync(JobSeekerAuthController.login));
+router.post(
+	"/forgetPassword",
+	catchAsync(JobSeekerAuthController.forgotPassword)
+);
+router.post(
+	"/resetPassword/:token",
+	catchAsync(JobSeekerAuthController.resetPassword)
+);
+router.post("/refresh", catchAsync(JobSeekerAuthController.newAccessToken));
+router.get(
+	"/logout",
+	catchAsync(authenticate.protect),
+	catchAsync(JobSeekerAuthController.logout)
+);
 
 // JOBSEEKER PROFILE
 router
-	.get("/", userController.allJobSeekers)
-	.get("/profile", authController.protect, userController.profileMe)
-	.patch("/profile", authController.protect, userController.updateProfile)
-	.delete("/profile", authController.protect, userController.deleteUser);
-
-
+	.get(
+		"/",
+		catchAsync(authenticate.protect),
+		catchAsync(JobSeekerController.allJobSeekers)
+	)
+	.get(
+		"/profile",
+		catchAsync(authenticate.protect),
+		catchAsync(JobSeekerController.jobSeekerById)
+	)
+	.patch(
+		"/profile",
+		catchAsync(authenticate.protect),
+		catchAsync(JobSeekerController.updateJobSeeker)
+	)
+	.delete(
+		"/profile",
+		catchAsync(authenticate.protect),
+		catchAsync(JobSeekerController.deleteJobSeeker)
+	);
 
 module.exports = router;

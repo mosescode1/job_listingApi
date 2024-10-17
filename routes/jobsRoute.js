@@ -1,17 +1,16 @@
 const express = require("express");
 const router = express.Router();
-const jobController = require("../controllers/Jobs/jobController");
-const authController = require("../controllers/jobseeker/authController");
-
-
+const authenticate = require("../middleware/authenticate");
+const JobController = require("../controllers/Jobs");
+const catchAsync = require("../utils/catchAsync");
 
 router
-	.get("/", jobController.jobsAll)
-	.get("/:jobId", jobController.jobById)
-	.get("/:jobId/apply", authController.protect, jobController.jobApply) // JOB APPLICATION
-
-
-
-
+	.get("/", catchAsync(JobController.allJobs))
+	.get("/:jobId", catchAsync(JobController.jobById))
+	.get(
+		"/:jobId/apply",
+		catchAsync(authenticate.protect),
+		catchAsync(JobController.jobApply)
+	);
 
 module.exports = router;

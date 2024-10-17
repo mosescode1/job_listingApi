@@ -76,7 +76,6 @@ model Education{
 model Skills {
   id             String     @id @default(uuid())
   value          String
-  label          String
   jobSeekerId   String
   jobSeeker      JobSeeker  @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
 }
