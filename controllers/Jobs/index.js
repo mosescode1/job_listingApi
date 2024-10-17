@@ -67,12 +67,25 @@ class JobController {
 			return next(new AppError("Missing UserID", 404));
 		}
 
+
+		const user = await prisma.jobSeeker.findUnique({
+			where: {
+				id: userId,
+			}
+		})
+
+		if (!user) {
+			return next(new AppError("No user Found", 404));
+		}
+
 		if (!jobId) {
 			return next(new AppError("Missing JobID", 404));
 		}
 
 		const appliedJob = await prisma.application.create({
 			data: {
+				name: `${user.firstName} ${user.lastName}`,
+				email: user.email,
 				coverLetter: req.body.coverLetter || null,
 				resumeUrl: req.body.resumeUrl || null,
 				jobSeekerId: userId,
