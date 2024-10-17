@@ -26,6 +26,13 @@ const verifyToken = token => {
 	return jwt.verify(token, config.jwt.accessSecretToken);
 }
 
+const verifyRefreshToken = (token) => {
+	return jwt.verify(token, config.jwt.refreshSecretToken);
+};
+
 module.exports = {
-	signToken, verifyToken, refreshToken
-}
+	signToken,
+	verifyToken,
+	refreshToken,
+	verifyRefreshToken,
+};

@@ -239,7 +239,7 @@ class JobSeekerAuthController {
 		});
 		if (!user) return next(new AppError("Invalid token", 403));
 
-		const decoded = await jwtFeatures.verifyToken(
+		const decoded = await jwtFeatures.verifyRefreshToken(
 			refreshToken,
 			config.jwt.refreshSecretToken
 			//process.env.REFRESH_TOKEN_SECRET
