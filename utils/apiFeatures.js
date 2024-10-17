@@ -28,7 +28,6 @@ class ApiFeatures {
 		const page = parseInt(this.queryString.page) || 1;
 		const limit = parseInt(this.queryString.limit) || 5;
 		const skip = (page - 1) * limit;
-
 		this.queryOptions.skip = skip;
 		this.queryOptions.take = limit;
 		return this;

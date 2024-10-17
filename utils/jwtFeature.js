@@ -1,28 +1,38 @@
 const jwt = require("jsonwebtoken");
+const config = require("../@config");
 
 
 const signToken = id => {
 	return jwt.sign({ id },
-		process.env.SECRET_KEY_JWT,
+		config.jwt.accessSecretToken,
 		{
-			expiresIn: process.env.SECRET_KEY_JWT_EXPIRES,
+			expiresIn: config.jwt.expiry,
 		})
 
 }
 
 
 const refreshToken = id => {
-	return jwt.sign({ id },
-		process.env.REFRESH_SECRET_KEY_JWT,
+	return jwt.sign(
+		{ id },
+		config.jwt.refreshSecretToken,
 		{
-			expiresIn: process.env.REFRESH_SECRET_KEY_JWT_EXPIRES,
-		})
+			expiresIn: config.jwt.refreshExpiry,
+		}
+	);
 }
 
 const verifyToken = token => {
-	return jwt.verify(token, process.env.SECRET_KEY_JWT)
+	return jwt.verify(token, config.jwt.accessSecretToken);
 }
 
+const verifyRefreshToken = (token) => {
+	return jwt.verify(token, config.jwt.refreshSecretToken);
+};
+
 module.exports = {
-	signToken, verifyToken, refreshToken
-}
+	signToken,
+	verifyToken,
+	refreshToken,
+	verifyRefreshToken,
+};
