@@ -10,7 +10,8 @@ const prisma = new PrismaClient(
 				password: true
 			},
 			employer: {
-				password: true
+				password: true,
+				refreshToken: true
 			}
 		}
 	}

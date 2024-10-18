@@ -29,6 +29,10 @@ const errDev = (err, res) => {
 	});
 };
 
+const prismaClientValidationError = () => {
+	return new AppError("Wrong Infomation passeed", 404);
+}
+
 const handleJsonWebTokenError = () => {
 	return new AppError("Please provide a valid json token", 401);
 };
@@ -46,6 +50,9 @@ const globalError = (err, _, res, next) => {
 
 		if (err.name === "JsonWebTokenError") {
 			error = handleJsonWebTokenError();
+		}
+		if (err.name === 'PrismaClientValidationError') {
+			error = prismaClientValidationError()
 		}
 
 		errProd(error, res);

@@ -4,6 +4,7 @@ const router = express.Router();
 const EmployerAuthController = require("../controllers/auth/employer-auth");
 const authenticate = require("../middleware/authenticate");
 const EmployerController = require("../controllers/employer");
+const JobController = require("../controllers/Jobs");
 
 // AUTH
 router.post("/signup", catchAsync(EmployerAuthController.signup));
@@ -27,7 +28,6 @@ router.get(
 router
 	.get(
 		"/",
-		catchAsync(authenticate.protect),
 		catchAsync(EmployerController.allEmployers)
 	)
 	.get(
@@ -49,9 +49,9 @@ router
 //// Employer JOB OPERATIONS
 router
 	.post(
-		"/job",
+		"/create-job",
 		catchAsync(authenticate.protect),
-		catchAsync(EmployerController.createJob)
+		catchAsync(JobController.createJob)
 	)
 	.get(
 		"/job",
@@ -61,17 +61,21 @@ router
 	.get(
 		"/job/:jobId",
 		catchAsync(authenticate.protect),
-		catchAsync(EmployerController.employerById)
-	)
-	.patch(
+		catchAsync(JobController.jobById)
+	).get(
+		"/job/:jobId/applicants",
+		catchAsync(authenticate.protect),
+		catchAsync(EmployerController.viewApplicants)
+	).patch(
 		"/job/:jobId",
 		catchAsync(authenticate.protect),
-		catchAsync(EmployerController.updatejob)
+		catchAsync(JobController.updatejob)
 	)
+	.patch("/job/:jobId/status/:applicationId", authenticate.protect, JobController.jobStatusUpdate)
 	.delete(
 		"/job/:jobId",
 		catchAsync(authenticate.protect),
-		catchAsync(EmployerController.deleteJob)
+		catchAsync(JobController.deleteJob)
 	);
 
 module.exports = router;

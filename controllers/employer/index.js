@@ -2,6 +2,7 @@ const prisma = require("../../prisma/client");
 const AppError = require("../../utils/AppError");
 const argon2 = require("argon2");
 const validateFields = require("../../utils/helpers/validate-req-body");
+const { refreshToken } = require("../../utils/jwtFeature");
 //const ApiFeatures = require("../../utils/apiFeatures");
 
 class EmployerController {
@@ -38,6 +39,7 @@ class EmployerController {
 			},
 		});
 
+
 		if (!employer) {
 			return next(
 				new AppError(`No employer Found with id:${req.userId}`),
@@ -47,10 +49,11 @@ class EmployerController {
 
 		res.status(200).json({
 			status: "OK",
-			message: "Employer",
+			message: "Employer Profile",
 			data: {
 				employer,
 			},
+
 		});
 	}
 
@@ -127,41 +130,6 @@ class EmployerController {
 		});
 	}
 
-	/**
-	 * Post new jobs for job seekers
-	 * @param {req} req
-	 * @param {res} res
-	 */
-	static async createJob(req, res) {
-		const requiredFields = [
-			"title",
-			"company",
-			"pay",
-			"type",
-			"aboutCompany",
-			"location",
-			"shortRoleDescription",
-			"fullRoleDescription",
-			"keyResponsibility",
-			"qualificationAndExperience",
-			"methodOfApplication",
-			"deadline",
-		];
-		validateFields(req, requiredFields);
-
-		let jobs;
-		jobs = await prisma.job.create({
-			data: { ...req.body, employer: { connect: { id: req.userId } } },
-		});
-
-		res.status(201).json({
-			status: "OK",
-			message: "Job posted successfully.",
-			data: {
-				jobs,
-			},
-		});
-	}
 
 	/**
 	 * Get all jobs posted by an employer
@@ -187,99 +155,32 @@ class EmployerController {
 		});
 	}
 
-	/**
-	 * Get a single job posted by an employer
-	 * @param {req} req
-	 * @param {res} res
-	 * @param {next} next
-	 */
 
-	static async employerJobById(req, res, next) {
+
+	static async viewApplicants(req, res, next) {
 		const jobId = req.params.jobId;
-		const singlejob = await prisma.employer.findUnique({
+		const empId = req.userId;
+
+		if (!jobId) {
+			return next(new Error("Mising Job Id", 404));
+		}
+
+		const applicants = await prisma.job.findUnique({
 			where: {
-				id: req.userId,
+				id: jobId,
+				employerId: empId,
 			},
-			select: {
-				jobsPosted: {
-					where: {
-						id: jobId,
-					},
-				},
-			},
-		});
+		}).applications();
 
 		res.status(200).json({
-			status: "OK",
-			data: singlejob,
-		});
-	}
-
-	/**
-	 * Update single job posted by an employer
-	 * @param {req} req
-	 * @param {res} res
-	 * @param {next} next
-	 */
-
-	static async updatejob(req, res, next) {
-		const jobId = req.params.jobId;
-
-		const updated = await prisma.employer.update({
-			where: {
-				id: req.userId,
-			},
+			status: "success",
+			message: "All applicants",
 			data: {
-				jobsPosted: {
-					update: {
-						where: {
-							id: jobId,
-						},
-						data: {
-							...req.body,
-						},
-					},
-				},
-			},
-			select: {
-				jobsPosted: {
-					where: {
-						id: jobId,
-					},
-				},
-			},
-		});
-
-		res.status(200).json({
-			status: "OK",
-			message: "Job updated successfully.",
-			data: updated,
-		});
+				applicants
+			}
+		})
 	}
 
-	/**
-	 * Delete single job posted by an employer
-	 * @param {req} req
-	 * @param {res} res
-	 * @param {next} next
-	 */
-	static async deleteJob(req, res, next) {
-		const jobId = req.params.jobId;
-		await prisma.employer.update({
-			where: {
-				id: req.userId,
-			},
-			data: {
-				jobsPosted: {
-					deleteMany: [{ id: jobId }],
-				},
-			},
-		});
-		res.status(204).json({
-			status: "OK",
-			message: "Message deleted successfully.",
-		});
-	}
 }
 
 module.exports = EmployerController;

@@ -128,10 +128,10 @@ model Employer {
   email        String   @unique
   password     String
   companyName  String   // Name of the company posting jobs
+  companyAddress String
   companyWebsite String? // Optional company website URL
-  location     String?  // Optional location of the company
   phone        String?  // Optional phone number
-  bio          String?  // Company description
+  bio         String  // Company description
   avatarUrl    String?  // Company logo or avatar URL
   refreshToken String?
   createdAt    DateTime @default(now())
@@ -168,11 +168,12 @@ model Job {
 
 model Application {
   id           String      @id @default(uuid())
-  name         String
+  fullName     String
   email        String
+  phone        String
+  resumeUrl    String
   proposal     String
-  coverLetter  String
-  status       ApplicationStatus @default(Pending) // Application status
+  status       ApplicationStatus @default(UnderReview) // Application status
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   jobSeekerId  String
@@ -213,7 +214,8 @@ enum JobStatus {
 }
 
 enum ApplicationStatus {
-  Pending
-  Accepted
+  UnderReview
+  InterviewScheduled
   Rejected
+  OfferMade
 }

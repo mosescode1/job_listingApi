@@ -7,7 +7,7 @@ const catchAsync = require("../utils/catchAsync");
 router
 	.get("/", catchAsync(JobController.allJobs))
 	.get("/:jobId", catchAsync(JobController.jobById))
-	.get(
+	.post(
 		"/:jobId/apply",
 		catchAsync(authenticate.protect),
 		catchAsync(JobController.jobApply)
