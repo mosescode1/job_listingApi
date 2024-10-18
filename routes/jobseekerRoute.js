@@ -40,6 +40,7 @@ router
 		catchAsync(authenticate.protect),
 		catchAsync(JobSeekerController.updateJobSeeker)
 	)
+	.patch("/profile/upload", authenticate.protect, upload.single('file'), JobSeekerController.uploadPic)
 	.delete(
 		"/profile",
 		catchAsync(authenticate.protect),

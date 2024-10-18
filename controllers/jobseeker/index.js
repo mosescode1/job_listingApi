@@ -193,6 +193,25 @@ class JobSeekerController {
 	}
 
 
+	static async uploadPic(req, res, next) {
+
+		const updated = await prisma.jobSeeker.update({
+			where: {
+				id: req.userId,
+			},
+
+			data: {
+				avatarUrl: req.file.path,
+			}
+		})
+		res.status(200).json({
+			status: "success",
+			data: {
+				updated
+			}
+		})
+	}
+
 }
 
 module.exports = JobSeekerController;
