@@ -51,6 +51,8 @@ const globalError = (err, _, res, next) => {
 		if (err.name === "JsonWebTokenError") {
 			error = handleJsonWebTokenError();
 		}
+		if (err.name === "TokenExpiredError")
+			error = handleJsonWebTokenError();
 		if (err.name === 'PrismaClientValidationError') {
 			error = prismaClientValidationError()
 		}

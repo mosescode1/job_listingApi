@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const config = require("../@config");
+const AppError = require("./AppError");
 
 
 const signToken = id => {
@@ -23,11 +24,20 @@ const refreshToken = id => {
 }
 
 const verifyToken = token => {
-	return jwt.verify(token, config.jwt.accessSecretToken);
+	try {
+		return jwt.verify(token, config.jwt.accessSecretToken);
+	} catch (err) {
+		return new AppError(err.message, 404);
+	}
 }
 
 const verifyRefreshToken = (token) => {
-	return jwt.verify(token, config.jwt.refreshSecretToken);
+	try {
+		return jwt.verify(token, config.jwt.refreshSecretToken);
+	}
+	catch (err) {
+		return new AppError(err.message, 404);
+	}
 };
 
 module.exports = {
