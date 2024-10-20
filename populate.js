@@ -3,9 +3,9 @@ const fs = require("fs");
 
 (async () => {
 	try {
-		const data = fs.readFileSync("./job.json", "utf8");
+		const data = await fs.readFile("./job.json", "utf8");
 		const jsData = JSON.parse(data);
-		const empId = "de4857b7-d1ce-4fea-8347-e0c133e2c1f5";
+		const empId = "71350b20-5624-4d9b-a885-7b241061844b";
 
 		for (const element of jsData) {
 			await prisma.job.create({

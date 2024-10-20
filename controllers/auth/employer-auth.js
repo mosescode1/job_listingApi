@@ -18,8 +18,8 @@ class EmployerAuthController {
 	 * @returns
 	 */
 	static async signup(req, res, next) {
-		validateFields(req, ["email", "password", "companyName", "companyAddress"]);
-		const { email, password, companyName, companyAddress } = req.body;
+		validateFields(req, ["email", "password", "companyName", "companyAddress", 'bio']);
+		const { email, password, companyName, companyAddress, bio } = req.body;
 
 		const findEmp = await prisma.employer.findUnique({
 			where: {
@@ -48,7 +48,7 @@ class EmployerAuthController {
 				companyAddress,
 				companyWebsite: req.body.companyWebsite || null,
 				phone: req.body.phone || null,
-				bio: req.body.bio || null,
+				bio,
 				avatarUrl: req.body.avatarUrl || null,
 			},
 		});
