@@ -91,6 +91,7 @@ class EmployerAuthController {
 				createdAt: true,
 				updatedAt: true,
 			},
+
 		});
 
 		if (!emp) {

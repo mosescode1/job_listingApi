@@ -1,9 +1,8 @@
 const prisma = require("../../prisma/client");
 const AppError = require("../../utils/AppError");
 const argon2 = require("argon2");
-const validateFields = require("../../utils/helpers/validate-req-body");
-const { refreshToken } = require("../../utils/jwtFeature");
-//const ApiFeatures = require("../../utils/apiFeatures");
+const ApiFeatures = require("../../utils/apiFeatures");
+const { application } = require("express");
 
 class EmployerController {
 	/**
@@ -12,7 +11,8 @@ class EmployerController {
 	 * @param {res} res
 	 */
 	static async allEmployers(req, res) {
-		let employers = await prisma.employer.findMany({});
+		const features = new ApiFeatures(req.query).pagination().sorting();
+		let employers = await prisma.employer.findMany(features.queryOptions);
 
 		res.status(200).json({
 			status: "OK",
@@ -157,6 +157,13 @@ class EmployerController {
 
 
 
+	/**
+	 * Get all jobs posted by an employer
+	 * @param {req} req
+	 * @param {res} res
+	 * @param {next} next
+	 */
+
 	static async viewApplicants(req, res, next) {
 		const jobId = req.params.jobId;
 		const empId = req.userId;
@@ -180,6 +187,64 @@ class EmployerController {
 			}
 		})
 	}
+
+
+
+	/**
+	 * Get all jobs posted by an employer
+	 * @param {req} req
+	 * @param {res} res
+	 * @param {next} next
+	 */
+
+	static async employerOverview(req, res, next) {
+		const empId = req.userId;
+		const overview = await prisma.employer.findUnique({
+			where: {
+				id: empId
+			},
+			select: {
+				companyName: true,
+				_count: {
+					select: {
+						jobsPosted: true // This counts the number of jobs posted by the employer
+					}
+				},
+
+				jobsPosted: {
+					select: {
+						_count: {
+							select: {
+								applications: true // This counts the number of applicants per job
+							}
+						},
+						status: true
+					}
+				}
+			}
+		});
+
+
+
+		// Processing the result
+		const totalJobsPosted = overview._count.jobsPosted;
+		const totalApplicants = overview.jobsPosted.reduce((acc, jobsPosted) => acc + jobsPosted._count.applications, 0);
+		const activeJobs = overview.jobsPosted.filter(job => job.status === 'Active').length;
+
+
+
+		res.status(200).json({
+			status: "success",
+			message: "Employer Overview",
+			data: {
+				totalJobsPosted,
+				totalApplicants,
+				activeJobs
+			}
+		})
+	}
+
+
 
 }
 
