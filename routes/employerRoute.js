@@ -71,11 +71,17 @@ router
 		catchAsync(authenticate.protect),
 		catchAsync(JobController.updatejob)
 	)
-	.patch("/job/:jobId/status/:applicationId", authenticate.protect, JobController.jobStatusUpdate)
+	.patch("/job/:jobId/status/:applicationId",
+		catchAsync(authenticate.protect),
+		catchAsync(JobController.jobStatusUpdate))
 	.delete(
 		"/job/:jobId",
 		catchAsync(authenticate.protect),
 		catchAsync(JobController.deleteJob)
 	);
+
+router.get("/overview",
+	catchAsync(authenticate.protect),
+	catchAsync(EmployerController.employerOverview));
 
 module.exports = router;
