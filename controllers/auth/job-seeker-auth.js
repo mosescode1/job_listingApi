@@ -8,7 +8,6 @@ const resetFunc = require("../../utils/resetToken");
 const crypto = require("crypto");
 const config = require("../../@config");
 
-
 class JobSeekerAuthController {
 	/**
 	 * Sign in job seeker
@@ -84,7 +83,6 @@ class JobSeekerAuthController {
 	 */
 
 	static async signup(req, res, next) {
-
 		validateFields(req, [
 			"email",
 			"password",
@@ -150,43 +148,40 @@ class JobSeekerAuthController {
 				gender,
 				address: address
 					? {
-						create: address,
-					}
+							create: address,
+						}
 					: undefined,
 
 				experience: experience?.length
 					? {
-						create: experience,
-					}
+							create: experience,
+						}
 					: undefined,
 
 				education: education?.length
 					? {
-						create: education,
-					}
+							create: education,
+						}
 					: undefined,
 
 				portfolio: portfolio?.length
 					? {
-						create: portfolio,
-					}
+							create: portfolio,
+						}
 					: undefined,
 
 				certification: certification?.length
 					? {
-						create: certification,
-					}
+							create: certification,
+						}
 					: undefined,
 
 				skills: skills?.length
 					? {
-						create: skills.map((skill) => ({
-							value: skill.value,
-						})),
-					}
+							create: skills,
+						}
 					: undefined,
-
-			}
+			},
 		});
 
 		jobSeeker.password = undefined;
