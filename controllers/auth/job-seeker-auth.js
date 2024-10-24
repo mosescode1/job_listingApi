@@ -178,8 +178,10 @@ class JobSeekerAuthController {
 
 				skills: skills?.length
 					? {
-							create: skills,
-						}
+						create: skills.map((skill) => ({
+							value: skill,
+						})),
+					}
 					: undefined,
 			},
 		});

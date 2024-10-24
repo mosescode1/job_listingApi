@@ -2,7 +2,6 @@ const prisma = require("../../prisma/client");
 const AppError = require("../../utils/AppError");
 const argon2 = require("argon2");
 const ApiFeatures = require("../../utils/apiFeatures");
-const { application } = require("express");
 
 class EmployerController {
 	/**
@@ -36,7 +35,16 @@ class EmployerController {
 		const employer = await prisma.employer.findUnique({
 			where: {
 				id: req.userId,
+				
 			},
+			include: {
+				jobsPosted: {
+					include: {
+						applications: true,
+        				JobCategory: true,
+					}
+				}
+			}
 		});
 
 
@@ -197,7 +205,7 @@ class EmployerController {
 	 * @param {next} next
 	 */
 
-	static async employerOverview(req, res, next) {
+	static async employerOverview(req, res) {
 		const empId = req.userId;
 		const overview = await prisma.employer.findUnique({
 			where: {

@@ -8,7 +8,7 @@ CREATE TYPE "JobType" AS ENUM ('FullTime', 'PartTime', 'Freelance', 'Contract', 
 CREATE TYPE "JobStatus" AS ENUM ('Active', 'Closed');
 
 -- CreateEnum
-CREATE TYPE "ApplicationStatus" AS ENUM ('Pending', 'Accepted', 'Rejected');
+CREATE TYPE "ApplicationStatus" AS ENUM ('Submitted', 'UnderReview', 'InterviewScheduled', 'Rejected', 'OfferMade');
 
 -- CreateTable
 CREATE TABLE "JobSeeker" (
@@ -132,10 +132,10 @@ CREATE TABLE "Employer" (
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "companyName" TEXT NOT NULL,
+    "companyAddress" TEXT NOT NULL,
     "companyWebsite" TEXT,
-    "location" TEXT,
     "phone" TEXT,
-    "bio" TEXT,
+    "bio" TEXT NOT NULL,
     "avatarUrl" TEXT,
     "refreshToken" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -170,9 +170,13 @@ CREATE TABLE "Job" (
 -- CreateTable
 CREATE TABLE "Application" (
     "id" TEXT NOT NULL,
-    "coverLetter" TEXT,
-    "resumeUrl" TEXT,
-    "status" "ApplicationStatus" NOT NULL DEFAULT 'Pending',
+    "firstName" TEXT NOT NULL,
+    "lastName" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "phone" TEXT NOT NULL,
+    "resumeUrl" TEXT NOT NULL,
+    "proposal" TEXT NOT NULL,
+    "status" "ApplicationStatus" NOT NULL DEFAULT 'Submitted',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "jobSeekerId" TEXT NOT NULL,

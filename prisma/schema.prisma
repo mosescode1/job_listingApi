@@ -159,21 +159,20 @@ model Job {
   employerId  String
   employer    Employer  @relation("JobsPostedByEmployer", fields: [employerId], references: [id])
   applications Application[]
-
   JobCategory JobCategory[]
-
   SavedJob SavedJob[]
 }
 
 
 model Application {
   id           String      @id @default(uuid())
-  fullName     String
+  firstName    String
+  lastName     String
   email        String
   phone        String
   resumeUrl    String
   proposal     String
-  status       ApplicationStatus @default(UnderReview) // Application status
+  status       ApplicationStatus @default(Submitted) // Application status
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   jobSeekerId  String
@@ -214,6 +213,7 @@ enum JobStatus {
 }
 
 enum ApplicationStatus {
+  Submitted
   UnderReview
   InterviewScheduled
   Rejected

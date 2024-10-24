@@ -79,6 +79,10 @@ class JobController {
 			where: {
 				id: jobId,
 			},
+			include: {
+				applications: true,
+				JobCategory: true,
+			}
 		});
 
 		if (!job) {
@@ -102,7 +106,7 @@ class JobController {
  * @param {next} next
  */
 
-	static async employerJobById(req, res, next) {
+	static async employerJobById(req, res) {
 		const jobId = req.params.jobId;
 		const empJob = await prisma.employer.findUnique({
 			where: {
@@ -131,7 +135,7 @@ class JobController {
 	 * @param {next} next
 	 */
 
-	static async updatejob(req, res, next) {
+	static async updatejob(req, res) {
 		const jobId = req.params.jobId;
 
 		const updated = await prisma.employer.update({
@@ -172,7 +176,7 @@ class JobController {
 	 * @param {res} res
 	 * @param {next} next
 	 */
-	static async deleteJob(req, res, next) {
+	static async deleteJob(req, res) {
 		const jobId = req.params.jobId;
 		await prisma.employer.update({
 			where: {
@@ -203,9 +207,9 @@ class JobController {
 		const userId = req.userId;
 		const jobId = req.params.jobId;
 
-		validateFields(req, ["fullName", "email", "phone"]);
+		validateFields(req, ["firstName", "lastName", "email", "phone", "proposal", "resumeUrl"]);
 
-		const { fullName, email, phone } = req.body;
+		const { firstName, lastName, email, phone, proposal, resumeUrl } = req.body;
 
 		if (!userId) {
 			return next(new AppError("Missing UserID", 404));
@@ -227,11 +231,12 @@ class JobController {
 
 		const appliedJob = await prisma.application.create({
 			data: {
-				fullName,
+				firstName,
+				lastName,
 				email,
 				phone,
-				proposal: req.body.proposal || null,
-				resumeUrl: req.body.resumeUrl || null,
+				proposal,
+				resumeUrl,
 				jobSeekerId: userId,
 				jobId: jobId,
 			},
