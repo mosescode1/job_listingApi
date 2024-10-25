@@ -48,37 +48,46 @@ router
 
 //// Employer JOB OPERATIONS
 router
-	.post(
-		"/create-job",
-		catchAsync(authenticate.protect),
-		catchAsync(JobController.createJob)
-	)
-	.get(
-		"/job",
-		catchAsync(authenticate.protect),
-		catchAsync(EmployerController.allEmployerJobs)
-	)
-	.get(
-		"/job/:jobId",
-		catchAsync(authenticate.protect),
-		catchAsync(JobController.jobById)
-	).get(
-		"/job/:jobId/applicants",
-		catchAsync(authenticate.protect),
-		catchAsync(EmployerController.viewApplicants)
-	).patch(
-		"/job/:jobId",
-		catchAsync(authenticate.protect),
-		catchAsync(JobController.updatejob)
-	)
-	.patch("/job/:jobId/status/:applicationId",
-		catchAsync(authenticate.protect),
-		catchAsync(JobController.jobStatusUpdate))
-	.delete(
-		"/job/:jobId",
-		catchAsync(authenticate.protect),
-		catchAsync(JobController.deleteJob)
-	);
+  .post(
+    "/create-job",
+    catchAsync(authenticate.protect),
+    catchAsync(JobController.createJob)
+  )
+  .get(
+    "/job",
+    catchAsync(authenticate.protect),
+    catchAsync(EmployerController.allEmployerJobs)
+  )
+  .get(
+    "/job/:jobId",
+    catchAsync(authenticate.protect),
+    catchAsync(JobController.jobById)
+  )
+  .get(
+    "/job/:jobId/applicants",
+    catchAsync(authenticate.protect),
+    catchAsync(EmployerController.viewApplicants)
+  )
+  .get(
+    "/job/applicant/:userId",
+    catchAsync(authenticate.protect),
+    catchAsync(EmployerController.viewApplicantProfile)
+  )
+  .patch(
+    "/job/:jobId",
+    catchAsync(authenticate.protect),
+    catchAsync(JobController.updatejob)
+  )
+  .patch(
+    "/job/:jobId/status/:applicationId",
+    catchAsync(authenticate.protect),
+    catchAsync(JobController.jobStatusUpdate)
+  )
+  .delete(
+    "/job/:jobId",
+    catchAsync(authenticate.protect),
+    catchAsync(JobController.deleteJob)
+  );
 
 router.get("/overview",
 	catchAsync(authenticate.protect),

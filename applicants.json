@@ -1,0 +1,48 @@
+[
+    {
+      "userId": "f9598bb8-089c-4312-b56a-42b62bb4bf75",
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "john.doe@example.com",
+      "phone": "123-456-7890",
+      "proposal": "I am highly interested in this role and have the relevant experience.",
+      "resumeUrl": "https://example.com/resume/john_doe.pdf"
+    },
+    {
+      "userId": "f9598bb8-089c-4312-b56a-42b62bb4bf75",
+      "firstName": "Jane",
+      "lastName": "Smith",
+      "email": "jane.smith@example.com",
+      "phone": "987-654-3210",
+      "proposal": "With my background, I can add great value to your team.",
+      "resumeUrl": "https://example.com/resume/jane_smith.pdf"
+    },
+    {
+      "userId": "f9598bb8-089c-4312-b56a-42b62bb4bf75",
+      "firstName": "Alice",
+      "lastName": "Johnson",
+      "email": "alice.johnson@example.com",
+      "phone": "555-123-4567",
+      "proposal": "I bring a strong work ethic and passion for the field.",
+      "resumeUrl": "https://example.com/resume/alice_johnson.pdf"
+    },
+    {
+      "userId": "36ce7534-df64-45c2-bdda-4363b00878a9",
+      "firstName": "YoutubeDonald",
+      "lastName": "Smith",
+      "email": "jane.smith@example.com",
+      "phone": "987-654-3210",
+      "proposal": "With my background, I can add great value to your team.",
+      "resumeUrl": "https://example.com/resume/jane_smith.pdf"
+    },
+    {
+      "userId": "36ce7534-df64-45c2-bdda-4363b00878a9",
+      "firstName": "Tom",
+      "lastName": "Guison",
+      "email": "alice.johnson@example.com",
+      "phone": "555-123-4567",
+      "proposal": "I bring a strong work ethic and passion for the field.",
+      "resumeUrl": "https://example.com/resume/alice_johnson.pdf"
+    }
+  ]
+  

@@ -193,7 +193,7 @@ class JobSeekerController {
 	}
 
 
-	static async uploadPic(req, res, next) {
+	static async uploadPic(req, res,) {
 
 		const updated = await prisma.jobSeeker.update({
 			where: {
