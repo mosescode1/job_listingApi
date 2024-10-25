@@ -3,6 +3,7 @@ const jwtFeatures = require("../utils/jwtFeature");
 const redisClient = require("../redis/redisClient");
 const prisma = require("../prisma/client");
 const config = require("../@config");
+const { decode } = require("jsonwebtoken");
 
 
 /**
@@ -25,12 +26,13 @@ const protect = async (req, _, next) => {
 	if (!decoded) {
 		return next(new AppError("Unauthorized ! No token provided", 401));
 	}
+
 	const authTokenKey = `auth:${decoded.id}`;
 	const redisToken = await redisClient.get(authTokenKey);
+
 	if (!redisToken) {
 		return next(new AppError("Token has expired", 403));
 	}
-
 	try {
 		await prisma.jobSeeker.findUnique({
 			where: {

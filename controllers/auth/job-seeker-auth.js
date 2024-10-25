@@ -92,6 +92,7 @@ class JobSeekerAuthController {
 			"gender",
 			"address",
 			"jobTitle",
+			"yearsOfExperience"
 		]);
 
 		const {
@@ -109,6 +110,7 @@ class JobSeekerAuthController {
 			skills,
 			certification,
 			portfolio,
+			yearsOfExperience
 		} = req.body;
 
 		const findUser = await prisma.jobSeeker.findUnique({
@@ -140,6 +142,7 @@ class JobSeekerAuthController {
 				lastName,
 				phone,
 				jobTitle,
+				yearsOfExperience,
 				cv: req.body.cv || null,
 				password: hashPassword,
 				bio: bio || null,
@@ -148,38 +151,38 @@ class JobSeekerAuthController {
 				gender,
 				address: address
 					? {
-							create: address,
-						}
+						create: address,
+					}
 					: undefined,
 
 				experience: experience?.length
 					? {
-							create: experience,
-						}
+						create: experience,
+					}
 					: undefined,
 
 				education: education?.length
 					? {
-							create: education,
-						}
+						create: education,
+					}
 					: undefined,
 
 				portfolio: portfolio?.length
 					? {
-							create: portfolio,
-						}
+						create: portfolio,
+					}
 					: undefined,
 
 				certification: certification?.length
 					? {
-							create: certification,
-						}
+						create: certification,
+					}
 					: undefined,
 
 				skills: skills?.length
 					? {
 						create: skills.map((skill) => ({
-							value: skill,
+							value: skill.value,
 						})),
 					}
 					: undefined,

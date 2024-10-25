@@ -12,7 +12,11 @@ class JobController {
 
 	static async allJobs(req, res) {
 		const features = new ApiFeatures(req.query).pagination().sorting();
-		const jobs = await prisma.job.findMany(features.queryOptions);
+		const jobs = await prisma.job.findMany({
+			...features.queryOptions, include: {
+				jobCategory: true,
+			}
+		});
 
 		if (jobs.length === 0) {
 			res.status(200).json({
@@ -50,12 +54,21 @@ class JobController {
 			"qualificationAndExperience",
 			"methodOfApplication",
 			"deadline",
+			"jobCategoryIds"
 		];
 		validateFields(req, requiredFields);
 
-		let jobs;
-		jobs = await prisma.job.create({
-			data: { ...req.body, employer: { connect: { id: req.userId } } },
+		const { jobCategoryIds, ...data } = req.body;
+		const jobs = await prisma.job.create({
+			data: {
+				...data,
+				employer: { connect: { id: req.userId } },
+				jobCategory: { connect: { id: jobCategoryIds } }
+			},
+			include: { // Include JobCategory in the response
+				jobCategory: true,
+				// employer: true // Optionally include employer details if needed
+			}
 		});
 
 		res.status(201).json({
@@ -250,7 +263,12 @@ class JobController {
 	}
 
 
-
+	/**
+	 * Employer Updates applicant  Status
+	 * @param {req} req
+	 * @param {res} res
+	 * @param {next} next
+	 */
 	static async jobStatusUpdate(req, res, next) {
 		const userId = req.userId;
 		const jobId = req.params.jobId;
@@ -297,6 +315,28 @@ class JobController {
 			data: {
 				updated
 			}
+		})
+	}
+
+
+	/**
+	 * Job Categories
+	 * @param {req} req
+	 * @param {res} res
+	 * @param {next} next
+	 */
+
+	static async JobCategories(req, res, next) {
+		const categories = await prisma.jobCategory.findMany({
+			orderBy: {
+				name: 'asc', // Use 'desc' for descending order
+			},
+		});
+
+		res.json({
+			status: "success",
+			count: categories.length,
+			data: categories
 		})
 	}
 }
