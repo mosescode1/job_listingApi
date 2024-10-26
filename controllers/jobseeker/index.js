@@ -24,7 +24,7 @@ class JobSeekerController {
 	}
 
 	/**
-	 * Get job seeker by id
+	 * job seeker Profile
 	 * @param {req} req
 	 * @param {res} res
 	 * @param {next} next
@@ -131,6 +131,87 @@ class JobSeekerController {
 			message: "Job seeker account deleted successfully.",
 		});
 	}
+
+
+	/**
+	 * View A jobSeeker By ID
+	 */
+
+	static async viewJobSeeker(req, res, next) {
+		const userId = req.params.userId;
+
+		if (!userId) {
+			return next(new AppError("Please Provide a userId", 404))
+		}
+
+		const user = prisma.jobSeeker.findUnique({
+			where: {
+				id: userId
+			},
+			omit: {
+				password: true,
+				refreshToken: true,
+			}
+		})
+
+		if (!user) {
+			return next(new AppError("Not a Valid User", 404));
+		}
+
+		res.status(200).json({
+			status: "success",
+			message: "JobSeeker details",
+			data: {
+				user
+			}
+		})
+
+
+	}
+
+
+	static async viewApplications(req, res, next) {
+		const userId = req.userId;
+
+		const applications = await prisma.application.findMany({
+			where: {
+				jobSeekerId: userId
+			}
+		})
+
+		if (!applications) {
+			return next(new AppError("No Applications Yet", 404));
+		}
+
+		res.status(200).json({
+			status: "success",
+			message: "all applications",
+			data: {
+				applications
+			}
+		})
+	}
+
+
+	static async uploadPic(req, res,) {
+
+		const updated = await prisma.jobSeeker.update({
+			where: {
+				id: req.userId,
+			},
+
+			data: {
+				avatarUrl: req.file.path,
+			}
+		})
+		res.status(200).json({
+			status: "success",
+			data: {
+				updated
+			}
+		})
+	}
+
 }
 
 module.exports = JobSeekerController;

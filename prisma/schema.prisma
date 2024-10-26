@@ -25,13 +25,14 @@ model JobSeeker {
   lastName    String
   jobTitle    String
   phone       String
-  cv          String?
+  yearsOfExperience String
   gender      Gender @default(Others)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  cv          String?
   bio         String?  // A brief bio or resume summary
   resumeUrl   String?  // URL to the resume file
   avatarUrl   String?  // URL to the profile avatar
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
   refreshToken String?
   address     JobSeekerAddress? // one user one address information
   education   Education[]
@@ -97,12 +98,6 @@ model Certification{
 }
 
 // * Optional Models
-model JobCategory {
-  id    String    @id @default(uuid())
-  name  String @unique  // e.g., "Software", "Marketing", "Design"
-  jobs  Job[]
-}
-
 model Notification {
   id        String     @id @default(uuid())
   message   String
@@ -128,10 +123,10 @@ model Employer {
   email        String   @unique
   password     String
   companyName  String   // Name of the company posting jobs
+  companyAddress String
   companyWebsite String? // Optional company website URL
-  location     String?  // Optional location of the company
   phone        String?  // Optional phone number
-  bio          String?  // Company description
+  bio         String  // Company description
   avatarUrl    String?  // Company logo or avatar URL
   refreshToken String?
   createdAt    DateTime @default(now())
@@ -159,25 +154,38 @@ model Job {
   employerId  String
   employer    Employer  @relation("JobsPostedByEmployer", fields: [employerId], references: [id])
   applications Application[]
-
-  JobCategory JobCategory[]
-
+  jobCategory JobCategory[] @relation("Categories")
   SavedJob SavedJob[]
+}
+
+model JobCategory {
+  id    String    @id @default(uuid())
+  name  String @unique  // e.g., "Software", "Marketing", "Design"
+  jobs  Job[] @relation("Categories")
 }
 
 
 model Application {
   id           String      @id @default(uuid())
-  coverLetter  String?  // Optional cover letter text
-  resumeUrl    String?  // URL to the resume submitted with the application
-  status       ApplicationStatus @default(Pending) // Application status
+  firstName    String
+  lastName     String
+  email        String
+  phone        String
+  resumeUrl    String
+  proposal     String
+  status       ApplicationStatus @default(Submitted) // Application status
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   jobSeekerId  String
   jobSeeker    JobSeeker @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
   jobId        String
   job          Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
 }
+
+
+
+
 
 // * ADMIN MODEL
 model Admin {
@@ -210,7 +218,9 @@ enum JobStatus {
 }
 
 enum ApplicationStatus {
-  Pending
-  Accepted
+  Submitted
+  UnderReview
+  InterviewScheduled
   Rejected
+  OfferMade
 }

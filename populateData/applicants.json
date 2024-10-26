@@ -1,0 +1,13 @@
+[
+    {
+      "userId": "22e0ad52-10af-4dc1-9cae-f44a5e5b701c",
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "john.doe@example.com",
+      "phone": "123-456-7890",
+      "proposal": "I am highly interested in this role and have the relevant experience.",
+      "resumeUrl": "https://example.com/resume/john_doe.pdf"
+    }
+
+  ]
+  

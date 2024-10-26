@@ -4,9 +4,10 @@ const authenticate = require("../middleware/authenticate");
 const JobSeekerAuthController = require("../controllers/auth/job-seeker-auth");
 const JobSeekerController = require("../controllers/jobseeker");
 const catchAsync = require("../utils/catchAsync");
+const upload = require("../middleware/upload");
 
 // AUTH
-router.post("/signup", catchAsync(JobSeekerAuthController.signup));
+router.post("/signup", upload.single('file'), catchAsync(JobSeekerAuthController.signup));
 router.post("/login", catchAsync(JobSeekerAuthController.login));
 router.post(
 	"/forgetPassword",
@@ -27,7 +28,6 @@ router.get(
 router
 	.get(
 		"/",
-		catchAsync(authenticate.protect),
 		catchAsync(JobSeekerController.allJobSeekers)
 	)
 	.get(
@@ -40,10 +40,16 @@ router
 		catchAsync(authenticate.protect),
 		catchAsync(JobSeekerController.updateJobSeeker)
 	)
+	.patch("/profile/upload", authenticate.protect, upload.single('file'), JobSeekerController.uploadPic)
 	.delete(
 		"/profile",
 		catchAsync(authenticate.protect),
 		catchAsync(JobSeekerController.deleteJobSeeker)
-	);
+	)
+
+// JOBSEEKER ACTIVITES
+router
+	.get("/:userId", catchAsync(JobSeekerController.viewJobSeeker))
+	.get("/applications", catchAsync(authenticate.protect), catchAsync(JobSeekerController.viewApplications))
 
 module.exports = router;
