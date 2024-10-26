@@ -40,7 +40,7 @@ class EmployerController {
         jobsPosted: {
           include: {
             applications: true,
-            JobCategory: true,
+            jobCategory: true,
           },
         },
       },
@@ -137,20 +137,42 @@ class EmployerController {
    */
 
   static async allEmployerJobs(req, res) {
-    const allJob = await prisma.employer
-      .findUnique({
+    try {
+      const employerJobs = await prisma.employer.findUnique({
         where: {
           id: req.userId,
         },
-      })
-      .jobsPosted();
+        include: {
+          jobsPosted: {
+            include: {
+              applications: true,
+              jobCategory: true,
+            },
+          },
+        },
+      });
 
-    res.status(200).json({
-      status: "OK",
-      message: "All jobs posted ",
-      count: allJob.length,
-      data: allJob,
-    });
+      if (!employerJobs) {
+        return res.status(404).json({
+          status: "error",
+          message: "Employer not found",
+        });
+      }
+
+      const allJobs = employerJobs.jobsPosted;
+
+      res.status(200).json({
+        status: "OK",
+        message: "All jobs posted",
+        count: allJobs.length,
+        data: allJobs,
+      });
+    } catch (error) {
+      res.status(500).json({
+        status: "error",
+        message: error.message,
+      });
+    }
   }
 
   /**

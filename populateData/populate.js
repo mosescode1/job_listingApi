@@ -1,11 +1,11 @@
-const prisma = require("./prisma/client");
+const prisma = require("../prisma/client");
 const fs = require("fs").promises;
 
 (async () => {
 	try {
-		const data = await fs.readFile("./job.json", "utf8");
+		const data = await fs.readFile("./populateData/job.json", "utf8");
 		const jsData = JSON.parse(data);
-		const empId = "69f8efb3-ff91-4ea0-8015-247b458cbac2";
+		const empId = "fdb2bed0-cac2-40a0-816a-7c279de7eea9";
 
 		// Insert each job into the database
 		for (const element of jsData) {

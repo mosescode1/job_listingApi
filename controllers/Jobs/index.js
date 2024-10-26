@@ -94,7 +94,7 @@ class JobController {
 			},
 			include: {
 				applications: true,
-				JobCategory: true,
+				jobCategory: true,
 			}
 		});
 

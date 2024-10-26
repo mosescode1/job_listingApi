@@ -1,9 +1,9 @@
-const prisma = require("./prisma/client");
+const prisma = require("../prisma/client");
 const fs = require("fs").promises;
 
 (async () => {
   try {
-    const data = await fs.readFile('./applicants.json', "utf8");
+    const data = await fs.readFile("./populateData/applicants.json", "utf8");
     const applicationsData = JSON.parse(data);
 
     for (const application of applicationsData) {
@@ -16,7 +16,7 @@ const fs = require("fs").promises;
           proposal: application.proposal,
           resumeUrl: application.resumeUrl,
           jobSeekerId: application.userId,
-          jobId: "c9a7d752-92ef-48c6-b5ec-7919f61b7a84",
+          jobId: "0d9218cc-c0e7-45a9-b42f-02eba3346ab9",
         },
       });
     }

@@ -19,13 +19,14 @@ CREATE TABLE "JobSeeker" (
     "lastName" TEXT NOT NULL,
     "jobTitle" TEXT NOT NULL,
     "phone" TEXT NOT NULL,
-    "cv" TEXT,
+    "yearsOfExperience" TEXT NOT NULL,
     "gender" "Gender" NOT NULL DEFAULT 'Others',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "cv" TEXT,
     "bio" TEXT,
     "resumeUrl" TEXT,
     "avatarUrl" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
     "refreshToken" TEXT,
 
     CONSTRAINT "JobSeeker_pkey" PRIMARY KEY ("id")
@@ -98,14 +99,6 @@ CREATE TABLE "Certification" (
 );
 
 -- CreateTable
-CREATE TABLE "JobCategory" (
-    "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-
-    CONSTRAINT "JobCategory_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "Notification" (
     "id" TEXT NOT NULL,
     "message" TEXT NOT NULL,
@@ -168,6 +161,14 @@ CREATE TABLE "Job" (
 );
 
 -- CreateTable
+CREATE TABLE "JobCategory" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+
+    CONSTRAINT "JobCategory_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Application" (
     "id" TEXT NOT NULL,
     "firstName" TEXT NOT NULL,
@@ -197,7 +198,7 @@ CREATE TABLE "Admin" (
 );
 
 -- CreateTable
-CREATE TABLE "_JobToJobCategory" (
+CREATE TABLE "_Categories" (
     "A" TEXT NOT NULL,
     "B" TEXT NOT NULL
 );
@@ -209,19 +210,19 @@ CREATE UNIQUE INDEX "JobSeeker_email_key" ON "JobSeeker"("email");
 CREATE UNIQUE INDEX "JobSeekerAddress_jobSeekerId_key" ON "JobSeekerAddress"("jobSeekerId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "JobCategory_name_key" ON "JobCategory"("name");
+CREATE UNIQUE INDEX "Employer_email_key" ON "Employer"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Employer_email_key" ON "Employer"("email");
+CREATE UNIQUE INDEX "JobCategory_name_key" ON "JobCategory"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Admin_email_key" ON "Admin"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "_JobToJobCategory_AB_unique" ON "_JobToJobCategory"("A", "B");
+CREATE UNIQUE INDEX "_Categories_AB_unique" ON "_Categories"("A", "B");
 
 -- CreateIndex
-CREATE INDEX "_JobToJobCategory_B_index" ON "_JobToJobCategory"("B");
+CREATE INDEX "_Categories_B_index" ON "_Categories"("B");
 
 -- AddForeignKey
 ALTER TABLE "JobSeekerAddress" ADD CONSTRAINT "JobSeekerAddress_jobSeekerId_fkey" FOREIGN KEY ("jobSeekerId") REFERENCES "JobSeeker"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -260,7 +261,7 @@ ALTER TABLE "Application" ADD CONSTRAINT "Application_jobSeekerId_fkey" FOREIGN 
 ALTER TABLE "Application" ADD CONSTRAINT "Application_jobId_fkey" FOREIGN KEY ("jobId") REFERENCES "Job"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "_JobToJobCategory" ADD CONSTRAINT "_JobToJobCategory_A_fkey" FOREIGN KEY ("A") REFERENCES "Job"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "_Categories" ADD CONSTRAINT "_Categories_A_fkey" FOREIGN KEY ("A") REFERENCES "Job"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "_JobToJobCategory" ADD CONSTRAINT "_JobToJobCategory_B_fkey" FOREIGN KEY ("B") REFERENCES "JobCategory"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "_Categories" ADD CONSTRAINT "_Categories_B_fkey" FOREIGN KEY ("B") REFERENCES "JobCategory"("id") ON DELETE CASCADE ON UPDATE CASCADE;
