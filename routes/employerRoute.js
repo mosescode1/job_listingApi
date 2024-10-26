@@ -1,4 +1,4 @@
-	const express = require("express");
+const express = require("express");
 const catchAsync = require("../utils/catchAsync");
 const router = express.Router();
 const EmployerAuthController = require("../controllers/auth/employer-auth");
@@ -10,41 +10,41 @@ const JobController = require("../controllers/Jobs");
 router.post("/signup", catchAsync(EmployerAuthController.signup));
 router.post("/login", catchAsync(EmployerAuthController.login));
 router.post(
-	"/forgetPassword",
-	catchAsync(EmployerAuthController.forgotPassword)
+  "/forgetPassword",
+  catchAsync(EmployerAuthController.forgotPassword)
 );
 router.post(
-	"/resetPassword/:token",
-	catchAsync(EmployerAuthController.resetPassword)
+  "/resetPassword/:token",
+  catchAsync(EmployerAuthController.resetPassword)
 );
 router.post("/refresh", catchAsync(EmployerAuthController.newAccessToken));
 router.get(
-	"/logout",
-	catchAsync(authenticate.protect),
-	catchAsync(EmployerAuthController.logout)
+  "/logout",
+  catchAsync(authenticate.protect),
+  catchAsync(EmployerAuthController.logout)
 );
 
 // EMP Profile
 router
-	.get(
-		"/",
-		catchAsync(EmployerController.allEmployers)
-	)
-	.get(
-		"/profile",
-		catchAsync(authenticate.protect),
-		catchAsync(EmployerController.employerById)
-	)
-	.patch(
-		"/profile",
-		catchAsync(authenticate.protect),
-		catchAsync(EmployerController.updateEmployer)
-	)
-	.delete(
-		"/profile",
-		catchAsync(authenticate.protect),
-		catchAsync(EmployerController.deleteEmployer)
-	);
+  .get(
+    "/",
+    catchAsync(EmployerController.allEmployers)
+  )
+  .get(
+    "/profile",
+    catchAsync(authenticate.protect),
+    catchAsync(EmployerController.employerById)
+  )
+  .patch(
+    "/profile",
+    catchAsync(authenticate.protect),
+    catchAsync(EmployerController.updateEmployer)
+  )
+  .delete(
+    "/profile",
+    catchAsync(authenticate.protect),
+    catchAsync(EmployerController.deleteEmployer)
+  );
 
 //// Employer JOB OPERATIONS
 router
@@ -69,7 +69,7 @@ router
     catchAsync(EmployerController.viewApplicants)
   )
   .get(
-    "/job/applicant/:userId",
+    "/job/applicant/:jobSeekerId",
     catchAsync(authenticate.protect),
     catchAsync(EmployerController.viewApplicantProfile)
   )
@@ -90,7 +90,7 @@ router
   );
 
 router.get("/overview",
-	catchAsync(authenticate.protect),
-	catchAsync(EmployerController.employerOverview));
+  catchAsync(authenticate.protect),
+  catchAsync(EmployerController.employerOverview));
 
 module.exports = router;

@@ -222,7 +222,7 @@ class EmployerController {
    */
 
   static async viewApplicantProfile(req, res, next) {
-    const userId = req.params.userId;
+    const userId = req.params.jobSeekerId;
 
     const applicant = await prisma.jobSeeker.findUnique({
       where: {

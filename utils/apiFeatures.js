@@ -1,3 +1,5 @@
+const { jobCategory } = require("../prisma/client");
+
 class ApiFeatures {
 	constructor(queryString) {
 		this.queryString = queryString;
@@ -21,6 +23,27 @@ class ApiFeatures {
 		} else {
 			this.queryOptions.orderBy = { id: 'desc' }; // Default sorting
 		}
+		return this;
+	}
+
+	categorySearching() {
+		if (this.queryString.search) {
+			const search = this.queryString.search.trim();
+			if (search) {
+				this.queryOptions.where = {
+					jobCategory: {
+						every: {
+							id: search
+						}
+					}
+				};
+
+			}
+		}
+		this.queryOptions.include = {
+			jobCategory: true
+		}
+
 		return this;
 	}
 
