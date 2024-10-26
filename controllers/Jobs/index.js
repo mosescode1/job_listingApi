@@ -11,12 +11,10 @@ class JobController {
 	 */
 
 	static async allJobs(req, res) {
-		const features = new ApiFeatures(req.query).pagination().sorting();
-		const jobs = await prisma.job.findMany({
-			...features.queryOptions, include: {
-				jobCategory: true,
-			}
-		});
+
+		const features = new ApiFeatures(req.query).pagination().sorting().categorySearching();
+		const jobs = await prisma.job.findMany(features.queryOptions);
+
 
 		if (jobs.length === 0) {
 			res.status(200).json({
@@ -220,17 +218,23 @@ class JobController {
 		const userId = req.userId;
 		const jobId = req.params.jobId;
 
-		validateFields(req, ["firstName", "lastName", "email", "phone", "proposal", "resumeUrl"]);
+		validateFields(req, ["proposal", "resumeUrl"]);
 
-		const { firstName, lastName, email, phone, proposal, resumeUrl } = req.body;
+		const { proposal, resumeUrl } = req.body;
 
-		if (!userId) {
-			return next(new AppError("Missing UserID", 404));
-		}
+		if (!userId) return next(new AppError("Missing UserID", 404));
 
-		if (!jobId) {
-			return next(new AppError("Missing JobID", 404));
-		}
+
+		const jobseeker = await prisma.jobSeeker.findUnique({
+			where: {
+				id: userId,
+			}
+		})
+
+		if (!jobseeker) return next(new AppError("No jobseeker With this ID", 404))
+
+		if (!jobId) return next(new AppError("Missing JobID", 404));
+
 
 		const job = await prisma.job.findUnique({
 			where: {
@@ -238,16 +242,23 @@ class JobController {
 			}
 		})
 
-		if (!job) {
-			return next(new AppError("No Job Match with this Id", 404));
-		}
+		if (!job) return next(new AppError("No Job Match with this Id", 404));
+
+		const applied = await prisma.application.findUnique({
+			where: {
+				jobSeekerId: jobseeker.id,
+			}
+		})
+
+		if (applied) return next(new AppError("You already Applied for This Job", 403));
+
 
 		const appliedJob = await prisma.application.create({
 			data: {
-				firstName,
-				lastName,
-				email,
-				phone,
+				firstName: jobseeker.firstName,
+				lastName: jobseeker.lastName,
+				email: jobseeker.email,
+				phone: jobseeker.phone,
 				proposal,
 				resumeUrl,
 				jobSeekerId: userId,
@@ -327,11 +338,10 @@ class JobController {
 	 */
 
 	static async JobCategories(req, res, next) {
-		const categories = await prisma.jobCategory.findMany({
-			orderBy: {
-				name: 'asc', // Use 'desc' for descending order
-			},
-		});
+
+		const features = new ApiFeatures(req.query).sorting()
+
+		const categories = await prisma.jobCategory.findMany(features.queryOptions);
 
 		res.json({
 			status: "success",
