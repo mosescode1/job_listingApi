@@ -11,14 +11,19 @@ class JobController {
    */
 
   static async allJobs(req, res) {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+
     const features = new ApiFeatures(req.query)
       .pagination()
       .sorting()
       .categorySearching();
+
     const jobs = await prisma.job.findMany(features.queryOptions);
 
     const jobcount = await prisma.job.count();
-    const hasMore = req.query.page * req.query.limit < jobcount;
+    const hasMore = page * limit < jobcount;
+    const nextPage = hasMore ? page + 1 : null;
 
     res.status(200).json({
       status: "success",
@@ -26,10 +31,10 @@ class JobController {
       total: jobcount,
       count: jobs.length,
       data: jobs,
-      hasMore, // Include the hasMore flag
+      hasMore,
+      nextPage,
     });
   }
-
   /**
    * Post new jobs for job seekers
    * @param {req} req
