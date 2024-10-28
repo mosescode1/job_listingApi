@@ -132,40 +132,12 @@ class JobSeekerController {
     });
   }
 
+
   /**
-   * View A jobSeeker By ID
+   *  all jobseeker applications
+   * @param {req} req
+   * @param {res} res
    */
-
-  static async viewJobSeeker(req, res, next) {
-    const userId = req.params.userId;
-
-    if (!userId) {
-      return next(new AppError("Please Provide a userId", 404));
-    }
-
-    const user = prisma.jobSeeker.findUnique({
-      where: {
-        id: userId,
-      },
-      omit: {
-        password: true,
-        refreshToken: true,
-      },
-    });
-
-    if (!user) {
-      return next(new AppError("Not a Valid User", 404));
-    }
-
-    res.status(200).json({
-      status: "success",
-      message: "JobSeeker details",
-      data: {
-        user,
-      },
-    });
-  }
-
   static async viewApplications(req, res, next) {
     const userId = req.userId;
 
@@ -210,6 +182,7 @@ class JobSeekerController {
   }
 
   static async uploadPic(req, res) {
+    console.log(req)
     const updated = await prisma.jobSeeker.update({
       where: {
         id: req.userId,

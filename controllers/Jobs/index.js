@@ -243,6 +243,7 @@ class JobController {
       },
     });
 
+
     if (applied) {
       return next(new AppError("You already applied for this job", 403));
     }
@@ -291,6 +292,14 @@ class JobController {
       },
     });
 
+    if (!empJob)
+      return next(
+        new AppError(
+          "This Employer does not have Access to this applicant",
+          403
+        )
+      );
+
     const applicantion = await prisma.application.findUnique({
       where: {
         id: applicationId,
@@ -302,13 +311,7 @@ class JobController {
         new AppError("No application with this id Does not Exist", 404)
       );
 
-    if (!empJob)
-      return next(
-        new AppError(
-          "This Employer does not have Access to this applicant",
-          403
-        )
-      );
+
 
     const updated = await prisma.application.update({
       where: {

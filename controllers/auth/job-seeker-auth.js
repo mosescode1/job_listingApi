@@ -38,6 +38,7 @@ class JobSeekerAuthController {
         avatarUrl: true,
         createdAt: true,
         updatedAt: true,
+        yearsOfExperience: true,
       },
     });
 
@@ -64,7 +65,7 @@ class JobSeekerAuthController {
     jobSeeker.password = undefined;
 
     res.status(200).json({
-      status: "OK",
+      status: "success",
       message: "Login successful.",
       accessToken: token,
       refreshToken,
@@ -146,40 +147,40 @@ class JobSeekerAuthController {
         gender,
         address: address
           ? {
-              create: address,
-            }
+            create: address,
+          }
           : undefined,
 
         experience: experience?.length
           ? {
-              create: experience,
-            }
+            create: experience,
+          }
           : undefined,
 
         education: education?.length
           ? {
-              create: education,
-            }
+            create: education,
+          }
           : undefined,
 
         portfolio: portfolio?.length
           ? {
-              create: portfolio,
-            }
+            create: portfolio,
+          }
           : undefined,
 
         certification: certification?.length
           ? {
-              create: certification,
-            }
+            create: certification,
+          }
           : undefined,
 
         skills: skills?.length
           ? {
-              create: skills.map((skill) => ({
-                value: skill,
-              })),
-            }
+            create: skills.map((skill) => ({
+              value: skill.value,
+            })),
+          }
           : undefined,
       },
     });
@@ -187,7 +188,7 @@ class JobSeekerAuthController {
     jobSeeker.password = undefined;
 
     res.status(201).json({
-      status: "OK",
+      status: "success",
       message: "Job seeker account created successfully",
       data: {
         jobSeeker,
@@ -196,7 +197,7 @@ class JobSeekerAuthController {
   }
 
   /**
-   * Log job seeker out
+   * LogOut job seeker out
    * @param {req} req
    * @param {res} res
    * @param {next} next
@@ -235,7 +236,8 @@ class JobSeekerAuthController {
     const user = await prisma.jobSeeker.findFirst({
       where: { refreshToken },
     });
-    if (!user) return next(new AppError("Invalid token", 401));
+
+    if (!user) return next(new AppError("Invalid Refresh Token", 401));
 
     const decoded = await jwtFeatures.verifyRefreshToken(
       refreshToken,
@@ -245,7 +247,11 @@ class JobSeekerAuthController {
     if (!decoded) return next(new AppError("Refresh Token Expired", 401));
 
     const newAccessToken = jwtFeatures.signToken(user.id);
-    res.status(200).json({ accessToken: newAccessToken });
+    res.status(200).json({
+      status: "success",
+      message: "New Access Token",
+      accessToken: newAccessToken
+    });
   }
 
   /**
