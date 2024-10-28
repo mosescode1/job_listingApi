@@ -31,7 +31,7 @@ const protect = async (req, _, next) => {
 	const redisToken = await redisClient.get(authTokenKey);
 
 	if (!redisToken) {
-		return next(new AppError("Token has expired", 403));
+		return next(new AppError("Token has expired", 401));
 	}
 	try {
 		await prisma.jobSeeker.findUnique({

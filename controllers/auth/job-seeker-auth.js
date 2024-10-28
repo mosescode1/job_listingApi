@@ -235,14 +235,14 @@ class JobSeekerAuthController {
     const user = await prisma.jobSeeker.findFirst({
       where: { refreshToken },
     });
-    if (!user) return next(new AppError("Invalid token", 403));
+    if (!user) return next(new AppError("Invalid token", 401));
 
     const decoded = await jwtFeatures.verifyRefreshToken(
       refreshToken,
       config.jwt.refreshSecretToken
       //process.env.REFRESH_TOKEN_SECRET
     );
-    if (!decoded) return next(new AppError("Refresh Token Expired", 403));
+    if (!decoded) return next(new AppError("Refresh Token Expired", 401));
 
     const newAccessToken = jwtFeatures.signToken(user.id);
     res.status(200).json({ accessToken: newAccessToken });
@@ -312,13 +312,13 @@ class JobSeekerAuthController {
     const storedHash = await redisClient.get(`resetToken:${userId}`);
 
     if (!storedHash) {
-      return next(new AppError("Reset token expired", 403));
+      return next(new AppError("Reset token expired", 401));
     }
 
     const verifyToken = resetFunc.verifyResetToken(resetToken, storedHash);
 
     if (!verifyToken) {
-      return next(new AppError("Invalid reset token", 403));
+      return next(new AppError("Invalid reset token", 401));
     }
 
     const user = await prisma.jobSeeker.findUnique({

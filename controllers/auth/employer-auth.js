@@ -168,13 +168,13 @@ class EmployerAuthController {
 		const emp = await prisma.employer.findFirst({
 			where: { refreshToken },
 		});
-		if (!emp) return next(new AppError("Invalid token", 403));
+		if (!emp) return next(new AppError("Invalid token", 401));
 
 		const decoded = await jwtFeatures.verifyRefreshToken(
 			refreshToken,
 			config.jwt.refreshSecretToken
 		);
-		if (!decoded) return next(new AppError("Refresh Token Expired", 403));
+		if (!decoded) return next(new AppError("Refresh Token Expired", 401));
 
 		const newAccessToken = jwtFeatures.signToken(emp.id);
 		res.status(200).json({ accessToken: newAccessToken });

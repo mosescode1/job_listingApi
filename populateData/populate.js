@@ -3,9 +3,9 @@ const fs = require("fs").promises;
 
 (async () => {
 	try {
-		const data = await fs.readFile("./populateData/job.json", "utf8");
+		const data = await fs.readFile("./job.json", "utf8");
 		const jsData = JSON.parse(data);
-		const empId = "fdb2bed0-cac2-40a0-816a-7c279de7eea9";
+		const empId = "9e57408f-3971-430a-b123-9376d3f07672";
 
 		// Insert each job into the database
 		for (const element of jsData) {

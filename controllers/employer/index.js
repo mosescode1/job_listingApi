@@ -220,10 +220,10 @@ class EmployerController {
    * @param {res} res
    * @param {next} next
    */
-
   static async viewApplicantProfile(req, res, next) {
-    const userId = req.params.jobSeekerId;
+    const { jobSeekerId: userId, jobId } = req.params;
 
+    // Find the applicant and include their details
     const applicant = await prisma.jobSeeker.findUnique({
       where: {
         id: userId,
@@ -238,13 +238,16 @@ class EmployerController {
         certification: true,
         experience: true,
         education: true,
+        applications: {
+          where: {
+            jobId: jobId, // Filter applications by the specified jobId
+          },
+        },
       },
     });
+
     if (!applicant) {
-      return next(
-        new AppError(`No Jobseeker Found with id:${req.userId}`),
-        404
-      );
+      return next(new AppError(`No Jobseeker Found with id: ${userId}`, 404));
     }
 
     res.status(200).json({

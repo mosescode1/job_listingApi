@@ -1,4 +1,4 @@
-const express = require("express");
+  const express = require("express");
 const catchAsync = require("../utils/catchAsync");
 const router = express.Router();
 const EmployerAuthController = require("../controllers/auth/employer-auth");
@@ -69,10 +69,11 @@ router
     catchAsync(EmployerController.viewApplicants)
   )
   .get(
-    "/job/applicant/:jobSeekerId",
+    "/job/applicant/:jobSeekerId/:jobId",
     catchAsync(authenticate.protect),
     catchAsync(EmployerController.viewApplicantProfile)
   )
+
   .patch(
     "/job/:jobId",
     catchAsync(authenticate.protect),
