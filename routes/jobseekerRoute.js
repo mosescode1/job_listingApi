@@ -9,7 +9,6 @@ const upload = require("../middleware/upload");
 // AUTH
 router.post(
   "/signup",
-  upload.single("file"),
   catchAsync(JobSeekerAuthController.signup)
 );
 router.post("/login", catchAsync(JobSeekerAuthController.login));
@@ -55,7 +54,7 @@ router
 
 // JOBSEEKER ACTIVITES
 router
-//   .get("/:userId", catchAsync(JobSeekerController.viewJobSeeker))
+  //   .get("/:userId", catchAsync(JobSeekerController.viewJobSeeker))
   .get(
     "/applications",
     catchAsync(authenticate.protect),

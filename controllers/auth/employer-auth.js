@@ -115,7 +115,7 @@ class EmployerAuthController {
 		});
 
 		const authTokenKey = `auth:${emp.id}`;
-		await redisClient.set(authTokenKey, token, 60 * 60);
+		await redisClient.set(authTokenKey, token, 60 * 60 * 1);
 
 		emp.password = undefined;
 		res.status(200).json({
