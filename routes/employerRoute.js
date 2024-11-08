@@ -24,7 +24,7 @@ router.get(
   catchAsync(EmployerAuthController.logout)
 );
 
-// EMP Profile
+//* EMP Profile
 router
   .get(
     "/",
@@ -46,7 +46,7 @@ router
     catchAsync(EmployerController.deleteEmployer)
   );
 
-//// Employer JOB OPERATIONS
+// * Employer JOB OPERATIONS
 router
   .post(
     "/create-job",
