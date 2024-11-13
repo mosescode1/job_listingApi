@@ -122,12 +122,12 @@ model Employer {
   id           String      @id @default(uuid())
   email        String   @unique
   password     String
-  companyName  String   // Name of the company posting jobs
+  companyName  String 
   companyAddress String
-  companyWebsite String? // Optional company website URL
-  phone        String?  // Optional phone number
-  bio         String  // Company description
-  avatarUrl    String?  // Company logo or avatar URL
+  companyWebsite String?
+  phone        String? 
+  companyDescription  String
+  avatarUrl    String?
   refreshToken String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

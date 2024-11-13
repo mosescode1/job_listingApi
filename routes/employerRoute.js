@@ -26,10 +26,7 @@ router.get(
 
 // EMP Profile
 router
-  .get(
-    "/",
-    catchAsync(EmployerController.allEmployers)
-  )
+  .get("/", catchAsync(EmployerController.allEmployers))
   .get(
     "/profile",
     catchAsync(authenticate.empProtect),
@@ -49,7 +46,7 @@ router
 //// Employer JOB OPERATIONS
 router
   .post(
-    "/create-job",
+    "/job",
     catchAsync(authenticate.empProtect),
     catchAsync(JobController.createJob)
   )
@@ -77,7 +74,7 @@ router
   .patch(
     "/job/:jobId",
     catchAsync(authenticate.empProtect),
-    catchAsync(JobController.updatejob)
+    catchAsync(JobController.updateJob)
   )
   .patch(
     "/job/:jobId/status/:applicationId",
@@ -90,8 +87,10 @@ router
     catchAsync(JobController.deleteJob)
   );
 
-router.get("/overview",
+router.get(
+  "/overview",
   catchAsync(authenticate.empProtect),
-  catchAsync(EmployerController.employerOverview));
+  catchAsync(EmployerController.employerOverview)
+);
 
 module.exports = router;
