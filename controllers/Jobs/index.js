@@ -9,16 +9,31 @@ class JobController {
    * @param {req} req
    * @param {res} res
    */
-
   static async allJobs(req, res) {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+
     const features = new ApiFeatures(req.query)
       .pagination()
       .sorting()
       .categorySearching();
-    const jobs = await prisma.job.findMany(features.queryOptions);
 
-    const jobcount = await prisma.job.count();
-    const hasMore = req.query.page * req.query.limit < jobcount;
+    const activeJobsQuery = {
+      ...features.queryOptions,
+      where: {
+        ...features.queryOptions.where,
+        status: "Active",
+      },
+    };
+
+    const jobs = await prisma.job.findMany(activeJobsQuery);
+
+    const jobcount = await prisma.job.count({
+      where: { status: "Active" },
+    });
+
+    const hasMore = page * limit < jobcount;
+    const nextPage = hasMore ? page + 1 : null;
 
     res.status(200).json({
       status: "success",
@@ -26,7 +41,8 @@ class JobController {
       total: jobcount,
       count: jobs.length,
       data: jobs,
-      hasMore, // Include the hasMore flag
+      hasMore,
+      nextPage,
     });
   }
 
@@ -36,12 +52,11 @@ class JobController {
    * @param {res} res
    */
   static async createJob(req, res) {
+    const empId = req.userId;
     const requiredFields = [
       "title",
-      "company",
       "pay",
       "type",
-      "aboutCompany",
       "location",
       "shortRoleDescription",
       "fullRoleDescription",
@@ -49,21 +64,24 @@ class JobController {
       "qualificationAndExperience",
       "methodOfApplication",
       "deadline",
-      "jobCategoryIds",
+      "jobCategory",
     ];
     validateFields(req, requiredFields);
 
-    const { jobCategoryIds, ...data } = req.body;
+    const { jobCategory, ...data } = req.body;
+    const employerDetails = await prisma.employer.findUnique({
+      where: { id: empId },
+    });
     const jobs = await prisma.job.create({
       data: {
         ...data,
+        company: employerDetails.companyName,
+        aboutCompany: employerDetails.companyDescription,
         employer: { connect: { id: req.userId } },
-        jobCategory: { connect: { id: jobCategoryIds } },
+        jobCategory: { connect: { id: jobCategory } },
       },
       include: {
-        // Include JobCategory in the response
         jobCategory: true,
-        // employer: true // Optionally include employer details if needed
       },
     });
 
@@ -143,8 +161,9 @@ class JobController {
    * @param {next} next
    */
 
-  static async updatejob(req, res) {
+  static async updateJob(req, res) {
     const jobId = req.params.jobId;
+    const { jobCategory, ...data } = req.body;
 
     const updated = await prisma.employer.update({
       where: {
@@ -157,7 +176,10 @@ class JobController {
               id: jobId,
             },
             data: {
-              ...req.body,
+              ...data,
+              jobCategory: jobCategory
+                ? { connect: { id: jobCategory } }
+                : undefined,
             },
           },
         },
@@ -236,13 +258,21 @@ class JobController {
 
     if (!job) return next(new AppError("No Job match with this Id", 404));
 
+    if (job.status !== "Active") {
+      return next(
+        new AppError(
+          "Employer has stopped receiving application for this job",
+          403
+        )
+      );
+    }
+
     const applied = await prisma.application.findFirst({
       where: {
         jobSeekerId: jobseeker.id,
         jobId: jobId,
       },
     });
-
 
     if (applied) {
       return next(new AppError("You already applied for this job", 403));
@@ -310,8 +340,6 @@ class JobController {
       return next(
         new AppError("No application with this id Does not Exist", 404)
       );
-
-
 
     const updated = await prisma.application.update({
       where: {

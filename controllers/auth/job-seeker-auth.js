@@ -43,7 +43,7 @@ class JobSeekerAuthController {
     });
 
     if (!jobSeeker) {
-      return next(new AppError(`No user Found with the email: ${email}`, 404));
+      return next(new AppError(`No user Found with this email`, 404));
     }
 
     const verified = await argon2.verify(jobSeeker.password, password);
@@ -120,7 +120,7 @@ class JobSeekerAuthController {
 
     if (findUser) {
       return next(
-        new AppError("Job seeker account with this email already exists", 403)
+        new AppError("Account with this email already exists", 403)
       );
     }
 
@@ -178,7 +178,7 @@ class JobSeekerAuthController {
         skills: skills?.length
           ? {
             create: skills.map((skill) => ({
-              value: skill.value,
+              value: skill,
             })),
           }
           : undefined,
