@@ -13,12 +13,16 @@ class JobSeekerController {
     const features = new ApiFeatures(req.query).pagination().sorting();
     let users = await prisma.jobSeeker.findMany(features.queryOptions);
 
+
     res.status(200).json({
       status: "successs",
       message: "All job seekers",
       count: users.length,
       data: {
-        users,
+        users: users.filter(user => {
+          user.refreshToken = undefined;
+          return user;
+        })
       },
     });
   }

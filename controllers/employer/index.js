@@ -2,6 +2,7 @@ const prisma = require("../../prisma/client");
 const AppError = require("../../utils/AppError");
 const argon2 = require("argon2");
 const ApiFeatures = require("../../utils/apiFeatures");
+const { monthlyApplicantData, averageSalary } = require("../../utils/helpers/utils");
 
 class EmployerController {
   /**
@@ -352,35 +353,32 @@ class EmployerController {
         employerId: empId, // Filters jobs by the given employer ID
       },
       _max: {
-        pay: true, // Gets the maximum salary for each group
+        averagePay: true
       },
       _count: true
     });
 
 
-    console.log(averageSalaryPerMonth);
-
 
     // NOTE Processing the result
+    const monthlyApplicants = monthlyApplicantData(applicantsPerMonth, monthNames);
+    const averagePay = averageSalary(averageSalaryPerMonth, monthNames);
 
-    const monthlyApplicants = applicantsPerMonth.map((item) => {
-      const month = monthNames[item.createdAt.getMonth()]
-      return {
-        // month: `${year}-${month < 10 ? '0' + month : month}`,
-        month,
-        count: item._count.id,
-      };
-    });
+    console.log(monthlyApplicants);
 
+    // * NOTE Total number of jobs posted by the employer
     const totalJobsPosted = overview._count.jobsPosted;
     const totalApplicants = overview.jobsPosted.reduce(
       (acc, jobsPosted) => acc + jobsPosted._count.applications,
       0
     );
+
+    // * NOTE Count the number of active jobs
     const activeJobs = overview.jobsPosted.filter(
       (job) => job.status === "Active"
     ).length;
 
+    // * NOTE: Count the number of jobs in each category
     const categoryData = jobCategoryData.map(item => {
       return {
         name: item.name,
@@ -398,9 +396,9 @@ class EmployerController {
         totalJobsPosted,
         totalApplicants,
         activeJobs,
+        averagePay,
         monthlyApplicants,
         jobCategoryData: categoryData
-        // averageSalaryPerMonth
 
       },
     });

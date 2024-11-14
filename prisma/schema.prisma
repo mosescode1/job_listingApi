@@ -21,7 +21,7 @@ model JobSeeker {
   password          String
   firstName         String
   lastName          String
-  jobTitle          String
+  profession        String
   phone             String
   yearsOfExperience String
   gender            Gender            @default(Others)
