@@ -14,182 +14,177 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
-
 // * JOBSEEKER MODEL
 model JobSeeker {
-  id          String      @id @default(uuid())
-  email       String   @unique
-  password    String
-  firstName   String
-  lastName    String
-  jobTitle    String
-  phone       String
+  id                String            @id @default(uuid())
+  email             String            @unique
+  password          String
+  firstName         String
+  lastName          String
+  jobTitle          String
+  phone             String
   yearsOfExperience String
-  gender      Gender @default(Others)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  cv          String?
-  bio         String?  // A brief bio or resume summary
-  resumeUrl   String?  // URL to the resume file
-  avatarUrl   String?  // URL to the profile avatar
-  refreshToken String?
-  address     JobSeekerAddress? // one user one address information
-  education   Education[]
-  experience  Experience[]
-  portfolio   Portfolio[]
-  skills      Skills[]
-  certification Certification[]
-  applications Application[]
-  notification Notification[]
-  savedJob     SavedJob[]
+  gender            Gender            @default(Others)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  cv                String?
+  bio               String? // A brief bio or resume summary
+  resumeUrl         String? // URL to the resume file
+  avatarUrl         String? // URL to the profile avatar
+  refreshToken      String?
+  address           JobSeekerAddress? // one user one address information
+  education         Education[]
+  experience        Experience[]
+  portfolio         Portfolio[]
+  skills            Skills[]
+  certification     Certification[]
+  applications      Application[]
+  notification      Notification[]
+  savedJob          SavedJob[]
 }
 
-model JobSeekerAddress{
-  id          String      @id @default(uuid())
+model JobSeekerAddress {
+  id          String    @id @default(uuid())
   country     String
   city        String
   state       String
   addressLine String
-  jobSeeker      JobSeeker  @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
-  jobSeekerId String @unique
+  jobSeeker   JobSeeker @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
+  jobSeekerId String    @unique
 }
 
-model Experience{
-  id             String     @id @default(uuid())
-  companyName    String
-  jobTitle       String
-  description    String
-  startDate      DateTime
-  endDate        DateTime
-  jobSeekerId    String
-  jobSeeker      JobSeeker @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
-}
-
-model Education{
-  id          String      @id @default(uuid())
-  school      String
-  degree      String
-  fieldOfStudy String
+model Experience {
+  id          String    @id @default(uuid())
+  companyName String
+  jobTitle    String
+  description String
+  startDate   DateTime
+  endDate     DateTime
   jobSeekerId String
-  jobSeeker      JobSeeker  @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
-}
-model Skills {
-  id             String     @id @default(uuid())
-  value          String
-  jobSeekerId   String
-  jobSeeker      JobSeeker  @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
-}
-model Portfolio {
-  id            String     @id @default(uuid())
-  description     String
-  link  String
-  jobSeekerId   String
-  jobSeeker      JobSeeker  @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
+  jobSeeker   JobSeeker @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
 }
 
-model Certification{
-  id             String     @id @default(uuid())
-  title          String
-  link           String
-  date           DateTime
-  jobSeekerId    String
-  jobSeeker      JobSeeker @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
+model Education {
+  id           String    @id @default(uuid())
+  school       String
+  degree       String
+  fieldOfStudy String
+  jobSeekerId  String
+  jobSeeker    JobSeeker @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
+}
+
+model Skills {
+  id          String    @id @default(uuid())
+  value       String
+  jobSeekerId String
+  jobSeeker   JobSeeker @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
+}
+
+model Portfolio {
+  id          String    @id @default(uuid())
+  description String
+  link        String
+  jobSeekerId String
+  jobSeeker   JobSeeker @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
+}
+
+model Certification {
+  id          String    @id @default(uuid())
+  title       String
+  link        String
+  date        DateTime
+  jobSeekerId String
+  jobSeeker   JobSeeker @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
 }
 
 // * Optional Models
 model Notification {
-  id        String     @id @default(uuid())
+  id        String    @id @default(uuid())
   message   String
-  isRead    Boolean  @default(false) // Marks if the notification has been read
-  createdAt DateTime @default(now())
+  isRead    Boolean   @default(false) // Marks if the notification has been read
+  createdAt DateTime  @default(now())
   userId    String
   jobSeeker JobSeeker @relation(fields: [userId], references: [id])
 }
 
 model SavedJob {
-  id          String      @id @default(uuid())
-  createdAt   DateTime @default(now())
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now())
   jobSeekerId String
   jobSeeker   JobSeeker @relation(fields: [jobSeekerId], references: [id])
   jobId       String
   job         Job       @relation(fields: [jobId], references: [id])
 }
 
-
 // * EMPLOYER MODEL AND JOB CREATION
 model Employer {
-  id           String      @id @default(uuid())
-  email        String   @unique
-  password     String
-  companyName  String   // Name of the company posting jobs
-  companyAddress String
-  companyWebsite String? // Optional company website URL
-  phone        String?  // Optional phone number
-  bio         String  // Company description
-  avatarUrl    String?  // Company logo or avatar URL
-  refreshToken String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  jobsPosted   Job[]    @relation("JobsPostedByEmployer")
+  id                 String   @id @default(uuid())
+  email              String   @unique
+  password           String
+  companyName        String
+  companyAddress     String
+  companyWebsite     String?
+  phone              String?
+  companyDescription String
+  avatarUrl          String?
+  refreshToken       String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  jobsPosted         Job[]    @relation("JobsPostedByEmployer")
 }
 
 model Job {
-  id          String      @id @default(uuid())
-  title String
-  company String
-  pay String
-  type JobType // FullTime or PartTime or Freelance or  Contract or Internship
-  aboutCompany String
-  location String
-  shortRoleDescription String
-  fullRoleDescription String
-  keyResponsibility String
+  id                         String        @id @default(uuid())
+  title                      String
+  company                    String
+  pay                        String
+  type                       JobType // FullTime or PartTime or Freelance or  Contract or Internship
+  aboutCompany               String
+  location                   String
+  shortRoleDescription       String
+  fullRoleDescription        String
+  keyResponsibility          String
   qualificationAndExperience String
-  methodOfApplication String
-  deadline String
-  status      JobStatus // Active or Closed
-  posted DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  employerId  String
-  employer    Employer  @relation("JobsPostedByEmployer", fields: [employerId], references: [id])
-  applications Application[]
-  jobCategory JobCategory[] @relation("Categories")
-  SavedJob SavedJob[]
+  methodOfApplication        String
+  deadline                   String
+  averagePay                 String // Average pay for the job so i can calculate the averagePay Per month
+  noOfApplicants             Int          @default(0) // Number of applicants that have applied for the job
+  status                     JobStatus // Active or Closed
+  posted                     DateTime      @default(now())
+  updatedAt                  DateTime      @updatedAt
+  employerId                 String
+  employer                   Employer      @relation("JobsPostedByEmployer", fields: [employerId], references: [id])
+  applications               Application[]
+  jobCategory                JobCategory[] @relation("Categories")
+  SavedJob                   SavedJob[]
 }
 
 model JobCategory {
-  id    String    @id @default(uuid())
-  name  String @unique  // e.g., "Software", "Marketing", "Design"
-  jobs  Job[] @relation("Categories")
+  id   String @id @default(uuid())
+  name String @unique // e.g., "Software", "Marketing", "Design"
+  jobs Job[]  @relation("Categories")
 }
-
 
 model Application {
-  id           String      @id @default(uuid())
-  firstName    String
-  lastName     String
-  email        String
-  phone        String
-  resumeUrl    String
-  proposal     String
-  status       ApplicationStatus @default(Submitted) // Application status
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  jobSeekerId  String
-  jobSeeker    JobSeeker @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
-  jobId        String
-  job          Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
-
+  id          String            @id @default(uuid())
+  firstName   String
+  lastName    String
+  email       String
+  phone       String
+  resumeUrl   String
+  proposal    String
+  status      ApplicationStatus @default(Submitted) // Application status
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  jobSeekerId String
+  jobSeeker   JobSeeker         @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
+  jobId       String
+  job         Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
 }
-
-
-
-
 
 // * ADMIN MODEL
 model Admin {
-  id        String      @id @default(uuid())
+  id        String   @id @default(uuid())
   email     String   @unique
   password  String
   createdAt DateTime @default(now())

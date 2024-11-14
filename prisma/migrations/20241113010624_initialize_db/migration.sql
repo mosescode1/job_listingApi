@@ -128,7 +128,7 @@ CREATE TABLE "Employer" (
     "companyAddress" TEXT NOT NULL,
     "companyWebsite" TEXT,
     "phone" TEXT,
-    "bio" TEXT NOT NULL,
+    "companyDescription" TEXT NOT NULL,
     "avatarUrl" TEXT,
     "refreshToken" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
