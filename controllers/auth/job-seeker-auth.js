@@ -28,7 +28,7 @@ class JobSeekerAuthController {
         password: true,
         id: true,
         email: true,
-        jobTitle: true,
+        profession: true,
         cv: true,
         firstName: true,
         lastName: true,
@@ -38,11 +38,12 @@ class JobSeekerAuthController {
         avatarUrl: true,
         createdAt: true,
         updatedAt: true,
+        yearsOfExperience: true,
       },
     });
 
     if (!jobSeeker) {
-      return next(new AppError(`No user Found with the email: ${email}`, 404));
+      return next(new AppError(`No user Found with this email`, 404));
     }
 
     const verified = await argon2.verify(jobSeeker.password, password);
@@ -64,7 +65,7 @@ class JobSeekerAuthController {
     jobSeeker.password = undefined;
 
     res.status(200).json({
-      status: "OK",
+      status: "success",
       message: "Login successful.",
       accessToken: token,
       refreshToken,
@@ -89,7 +90,7 @@ class JobSeekerAuthController {
       "phone",
       "gender",
       "address",
-      "jobTitle",
+      "profession",
       "yearsOfExperience",
     ]);
 
@@ -102,7 +103,7 @@ class JobSeekerAuthController {
       phone,
       gender,
       address,
-      jobTitle,
+      profession,
       experience,
       education,
       skills,
@@ -119,7 +120,7 @@ class JobSeekerAuthController {
 
     if (findUser) {
       return next(
-        new AppError("Job seeker account with this email already exists", 403)
+        new AppError("Account with this email already exists", 403)
       );
     }
 
@@ -136,7 +137,7 @@ class JobSeekerAuthController {
         email,
         lastName,
         phone,
-        jobTitle,
+        profession,
         yearsOfExperience,
         cv: req.body.cv || null,
         password: hashPassword,
@@ -146,40 +147,40 @@ class JobSeekerAuthController {
         gender,
         address: address
           ? {
-              create: address,
-            }
+            create: address,
+          }
           : undefined,
 
         experience: experience?.length
           ? {
-              create: experience,
-            }
+            create: experience,
+          }
           : undefined,
 
         education: education?.length
           ? {
-              create: education,
-            }
+            create: education,
+          }
           : undefined,
 
         portfolio: portfolio?.length
           ? {
-              create: portfolio,
-            }
+            create: portfolio,
+          }
           : undefined,
 
         certification: certification?.length
           ? {
-              create: certification,
-            }
+            create: certification,
+          }
           : undefined,
 
         skills: skills?.length
           ? {
-              create: skills.map((skill) => ({
-                value: skill,
-              })),
-            }
+            create: skills.map((skill) => ({
+              value: skill.value,
+            })),
+          }
           : undefined,
       },
     });
@@ -187,7 +188,7 @@ class JobSeekerAuthController {
     jobSeeker.password = undefined;
 
     res.status(201).json({
-      status: "OK",
+      status: "success",
       message: "Job seeker account created successfully",
       data: {
         jobSeeker,
@@ -196,7 +197,7 @@ class JobSeekerAuthController {
   }
 
   /**
-   * Log job seeker out
+   * LogOut job seeker out
    * @param {req} req
    * @param {res} res
    * @param {next} next
@@ -235,17 +236,22 @@ class JobSeekerAuthController {
     const user = await prisma.jobSeeker.findFirst({
       where: { refreshToken },
     });
-    if (!user) return next(new AppError("Invalid token", 403));
+
+    if (!user) return next(new AppError("Invalid Refresh Token", 401));
 
     const decoded = await jwtFeatures.verifyRefreshToken(
       refreshToken,
       config.jwt.refreshSecretToken
       //process.env.REFRESH_TOKEN_SECRET
     );
-    if (!decoded) return next(new AppError("Refresh Token Expired", 403));
+    if (!decoded) return next(new AppError("Refresh Token Expired", 401));
 
     const newAccessToken = jwtFeatures.signToken(user.id);
-    res.status(200).json({ accessToken: newAccessToken });
+    res.status(200).json({
+      status: "success",
+      message: "New Access Token",
+      accessToken: newAccessToken
+    });
   }
 
   /**
@@ -312,13 +318,13 @@ class JobSeekerAuthController {
     const storedHash = await redisClient.get(`resetToken:${userId}`);
 
     if (!storedHash) {
-      return next(new AppError("Reset token expired", 403));
+      return next(new AppError("Reset token expired", 401));
     }
 
     const verifyToken = resetFunc.verifyResetToken(resetToken, storedHash);
 
     if (!verifyToken) {
-      return next(new AppError("Invalid reset token", 403));
+      return next(new AppError("Invalid reset token", 401));
     }
 
     const user = await prisma.jobSeeker.findUnique({

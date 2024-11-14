@@ -2,6 +2,7 @@ const prisma = require("../../prisma/client");
 const AppError = require("../../utils/AppError");
 const argon2 = require("argon2");
 const ApiFeatures = require("../../utils/apiFeatures");
+const { monthlyApplicantData, averageSalary } = require("../../utils/helpers/utils");
 
 class EmployerController {
   /**
@@ -220,10 +221,10 @@ class EmployerController {
    * @param {res} res
    * @param {next} next
    */
-
   static async viewApplicantProfile(req, res, next) {
-    const userId = req.params.jobSeekerId;
+    const { jobSeekerId: userId, jobId } = req.params;
 
+    // Find the applicant and include their details
     const applicant = await prisma.jobSeeker.findUnique({
       where: {
         id: userId,
@@ -238,13 +239,16 @@ class EmployerController {
         certification: true,
         experience: true,
         education: true,
+        applications: {
+          where: {
+            jobId: jobId, // Filter applications by the specified jobId
+          },
+        },
       },
     });
+
     if (!applicant) {
-      return next(
-        new AppError(`No Jobseeker Found with id:${req.userId}`),
-        404
-      );
+      return next(new AppError(`No Jobseeker Found with id: ${userId}`, 404));
     }
 
     res.status(200).json({
@@ -257,49 +261,134 @@ class EmployerController {
   }
 
   /**
-   * Get all jobs posted by an employer
+   * Get Employer Overview
    * @param {req} req
    * @param {res} res
    * @param {next} next
    */
 
   static async employerOverview(req, res) {
-    const empId = req.userId;
-    const overview = await prisma.employer.findUnique({
-      where: {
-        id: empId,
-      },
-      select: {
-        companyName: true,
-        _count: {
-          select: {
-            jobsPosted: true, // This counts the number of jobs posted by the employer
-          },
-        },
 
-        jobsPosted: {
-          select: {
-            _count: {
-              select: {
-                applications: true, // This counts the number of applicants per job
-              },
+
+    const monthNames = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"
+    ];
+
+    const empId = req.userId;
+
+
+    // * LOGIC
+    const [overview, applicantsPerMonth, jobCategoryData] = await Promise.all([
+
+      // NOTE: Fetch employer overview
+      prisma.employer.findUnique({
+        where: {
+          id: empId,
+        },
+        select: {
+          companyName: true,
+          _count: {
+            select: {
+              jobsPosted: true, // This counts the number of jobs posted by the employer
             },
-            status: true,
+          },
+          jobsPosted: {
+            select: {
+              _count: {
+                select: {
+                  applications: true, // This counts the number of applicants per job
+                },
+              },
+              status: true,
+            },
           },
         },
+      }),
+
+      // NOTE: Fetch the number of applicants per month
+      prisma.application.groupBy({
+        by: ['createdAt'],
+        where: {
+          job: {
+            employerId: empId,
+          },
+        },
+        _count: {
+          id: true,
+        },
+        orderBy: {
+          createdAt: 'asc',
+        },
+      }),
+
+      // NOTE: Fetch the number of jobs in each category
+      prisma.jobCategory.findMany({
+        where: {
+          jobs: {
+            some: {
+              employerId: empId,
+            },
+          },
+        },
+        select: {
+          name: true,  // Category name
+          jobs: {
+            where: {
+              employerId: empId,
+            },
+            select: {
+              jobCategory: true// Count of jobs in this category for this employer
+            },
+          },
+        },
+      }),
+    ]);
+
+
+    // TODO: Fetch the average salary per month
+    const averageSalaryPerMonth = await prisma.job.groupBy({
+      by: ['posted'], // Groups jobs by the 'posted' date
+      where: {
+        employerId: empId, // Filters jobs by the given employer ID
       },
+      _max: {
+        averagePay: true
+      },
+      _count: true
     });
 
-    // Processing the result
+
+
+    // NOTE Processing the result
+    const monthlyApplicants = monthlyApplicantData(applicantsPerMonth, monthNames);
+    const averagePay = averageSalary(averageSalaryPerMonth, monthNames);
+
+    console.log(monthlyApplicants);
+
+    // * NOTE Total number of jobs posted by the employer
     const totalJobsPosted = overview._count.jobsPosted;
     const totalApplicants = overview.jobsPosted.reduce(
       (acc, jobsPosted) => acc + jobsPosted._count.applications,
       0
     );
+
+    // * NOTE Count the number of active jobs
     const activeJobs = overview.jobsPosted.filter(
       (job) => job.status === "Active"
     ).length;
 
+    // * NOTE: Count the number of jobs in each category
+    const categoryData = jobCategoryData.map(item => {
+      return {
+        name: item.name,
+        count: item.jobs.length
+      }
+    })
+
+
+
+    // NOTE: SEND RESULT
     res.status(200).json({
       status: "success",
       message: "Employer Overview",
@@ -307,6 +396,10 @@ class EmployerController {
         totalJobsPosted,
         totalApplicants,
         activeJobs,
+        averagePay,
+        monthlyApplicants,
+        jobCategoryData: categoryData
+
       },
     });
   }
