@@ -27,6 +27,7 @@ class EmployerAuthController {
     const { email, password, companyName, companyAddress, companyDescription } =
       req.body;
 
+
     const findEmp = await prisma.employer.findUnique({
       where: {
         email: email,
