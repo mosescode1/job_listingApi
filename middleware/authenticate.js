@@ -18,7 +18,6 @@ const protect = async (req, _, next) => {
 	}
 
 	const token = req.headers.authorization.split(" ")[1];
-	console.log(token)
 	const decoded = jwtFeatures.verifyToken(
 		token,
 		config.jwt.accessSecretToken
@@ -31,6 +30,7 @@ const protect = async (req, _, next) => {
 	const authTokenKey = `auth:${decoded.id}`;
 
 	const redisToken = await redisClient.get(authTokenKey);
+
 
 	if (!redisToken) {
 		return next(new AppError("Token has expired", 401));

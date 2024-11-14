@@ -28,7 +28,7 @@ class JobSeekerAuthController {
         password: true,
         id: true,
         email: true,
-        jobTitle: true,
+        profession: true,
         cv: true,
         firstName: true,
         lastName: true,
@@ -90,7 +90,7 @@ class JobSeekerAuthController {
       "phone",
       "gender",
       "address",
-      "jobTitle",
+      "profession",
       "yearsOfExperience",
     ]);
 
@@ -103,7 +103,7 @@ class JobSeekerAuthController {
       phone,
       gender,
       address,
-      jobTitle,
+      profession,
       experience,
       education,
       skills,
@@ -137,7 +137,7 @@ class JobSeekerAuthController {
         email,
         lastName,
         phone,
-        jobTitle,
+        profession,
         yearsOfExperience,
         cv: req.body.cv || null,
         password: hashPassword,
@@ -178,7 +178,7 @@ class JobSeekerAuthController {
         skills: skills?.length
           ? {
             create: skills.map((skill) => ({
-              value: skill,
+              value: skill.value,
             })),
           }
           : undefined,

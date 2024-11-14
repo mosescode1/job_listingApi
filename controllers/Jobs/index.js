@@ -234,6 +234,7 @@ class JobController {
     const userId = req.userId;
     const jobId = req.params.jobId;
 
+
     validateFields(req, ["proposal", "resumeUrl"]);
 
     const { proposal, resumeUrl } = req.body;
@@ -277,6 +278,18 @@ class JobController {
     if (applied) {
       return next(new AppError("You already applied for this job", 403));
     }
+
+    //  NOTE: Increment the number of applicants for the job
+    await prisma.job.update({
+      where: {
+        id: jobId,
+      },
+      data: {
+        noOfApplicants: {
+          increment: 1,
+        },
+      }
+    });
 
     const appliedJob = await prisma.application.create({
       data: {

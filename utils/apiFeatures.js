@@ -1,4 +1,3 @@
-const { jobCategory } = require("../prisma/client");
 
 class ApiFeatures {
 	constructor(queryString) {
