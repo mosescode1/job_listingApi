@@ -1,36 +1,29 @@
-const crypto = require("crypto");
+import crypto from 'crypto';
 
 //! verify Reset token
-function verifyResetToken(providedToken, storedHash) {
+export function verifyResetToken(providedToken: string, storedHash: string) {
 	const tokenHash = crypto
-		.createHash("sha256")
+		.createHash('sha256')
 		.update(providedToken)
-		.digest("hex");
+		.digest('hex');
 
 	// Compare the newly generated hash with the stored hash
 	if (tokenHash === storedHash) {
-		console.log("Token is valid!");
+		console.log('Token is valid!');
 		return true; // Token is valid
 	} else {
-		console.log("Token is invalid!");
+		console.log('Token is invalid!');
 		return false; // Token is invalid
 	}
 }
 //! generates Reset token
-function generateResetToken(resetToken) {
+export function generateResetToken(resetToken: string) {
 	const tokenHash = crypto
-		.createHash("sha256")
+		.createHash('sha256')
 		.update(resetToken)
-		.digest("hex");
+		.digest('hex');
 
 	// Store tokenHash in your database along with the user record
-	console.log("Generated Hash:", tokenHash);
+	console.log('Generated Hash:', tokenHash);
 	return tokenHash;
-}
-
-
-
-module.exports = {
-	verifyResetToken,
-	generateResetToken
 }
