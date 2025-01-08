@@ -1,6 +1,7 @@
-
 class ApiFeatures {
-	constructor(queryString) {
+	queryString: { [key: string]: any };
+	queryOptions: { [x: string]: {} };
+	constructor(queryString: { [key: string]: any }) {
 		this.queryString = queryString;
 		this.queryOptions = {}; // Store Prisma query options (like where, orderBy, etc.)
 	}
@@ -8,15 +9,15 @@ class ApiFeatures {
 	filter() {
 		const queryObj = { ...this.queryString };
 		const excludedQuery = ['sort', 'limit', 'page', 'fields'];
-		excludedQuery.forEach(excluded => delete queryObj[excluded]);
+		excludedQuery.forEach((excluded) => delete queryObj[excluded]);
 
 		return this;
 	}
 
 	sorting() {
 		if (this.queryString.sort) {
-			const sorting = this.queryString.sort.split(",").map(field => ({
-				[field]: 'asc' // or 'desc'
+			const sorting = this.queryString.sort.split(',').map((field: string) => ({
+				[field]: 'asc', // or 'desc'
 			}));
 			this.queryOptions.orderBy = sorting;
 		} else {
@@ -32,16 +33,15 @@ class ApiFeatures {
 				this.queryOptions.where = {
 					jobCategory: {
 						every: {
-							id: search
-						}
-					}
+							id: search,
+						},
+					},
 				};
-
 			}
 		}
 		this.queryOptions.include = {
-			jobCategory: true
-		}
+			jobCategory: true,
+		};
 
 		return this;
 	}
@@ -56,4 +56,4 @@ class ApiFeatures {
 	}
 }
 
-module.exports = ApiFeatures;
+export default ApiFeatures;

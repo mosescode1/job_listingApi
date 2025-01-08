@@ -2,7 +2,7 @@ const AppError = require("../utils/AppError");
 const jwtFeatures = require("../utils/jwtFeature");
 const redisClient = require("../redis/redisClient");
 const prisma = require("../prisma/client");
-const config = require("../@config");
+const config = require("../config");
 // const { decode } = require("jsonwebtoken");
 
 
