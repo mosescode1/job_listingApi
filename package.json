@@ -10,7 +10,7 @@
 		"start-redis": "sudo service redis-server start",
 		"stop-redis": "sudo service redis-server stop",
 		"start-db": "sudo service postgresql start",
-		"start": "npx nodemon"
+		"start": "TS_NODE_TRANSPILE_ONLY=true nodemon"
 	},
 	"author": "Eteng Moses, Temitope Abiodun",
 	"license": "ISC",
@@ -34,6 +34,7 @@
 		"@types/express": "^5.0.0",
 		"@types/ioredis": "^4.28.10",
 		"@types/jsonwebtoken": "^9.0.7",
+		"@types/multer": "^1.4.12",
 		"@types/redis": "^4.0.10",
 		"eslint": "^9.11.1",
 		"eslint-config-prettier": "^9.1.0",
