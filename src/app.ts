@@ -1,14 +1,14 @@
-import express, { Express } from 'express';
-import { globalError } from '../controllers/error';
-import { AppError } from '../utils/AppError';
-import { statsRouter } from '../routes/stats';
-import { jobSeekerRouter } from '../routes/jobseekerRoute';
-import { employerRouter } from '../routes/employerRoute';
-import { jobRouter } from '../routes/jobsRoute';
+import express, { Application, Express } from 'express';
+import { globalError } from './controllers/error';
+import { AppError } from './utils/AppError';
+import { statsRouter } from './routes/stats';
+import { jobSeekerRouter } from './routes/jobseekerRoute';
+import { employerRouter } from './routes/employerRoute';
+import { jobRouter } from './routes/jobsRoute';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
-export const app: Express = express();
+export const app: Application = express();
 
 app.set('trust proxy', 1);
 app.use(express.json());

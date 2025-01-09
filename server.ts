@@ -1,4 +1,4 @@
-import { Config } from './config';
+import { Config } from './src/config';
 
 process.on('UncaughtException', (err) => {
 	console.log(err.name, err.message);

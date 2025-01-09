@@ -1,4 +1,4 @@
-import { prisma } from '../../prisma/client';
+import { prisma } from '../../../prisma/client';
 import { AppError } from '../../utils/AppError';
 import argon2 from 'argon2';
 import ApiFeatures from '../../utils/apiFeatures';

@@ -1,5 +1,5 @@
 import { AppError } from '../../utils/AppError';
-import { prisma } from '../../prisma/client';
+import { prisma } from '../../../prisma/client';
 import ApiFeatures from '../../utils/apiFeatures';
 import validateFields from '../../utils/helpers/validate-req-body';
 import { Request, Response, NextFunction } from 'express';
@@ -424,4 +424,4 @@ class JobController {
 		});
 	}
 }
-module.exports = JobController;
+export { JobController };

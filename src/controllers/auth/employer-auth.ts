@@ -2,12 +2,11 @@ import argon2 from 'argon2';
 import jwtFeatures from '../../utils/jwtFeature';
 import { redisClient } from '../../redis/redisClient';
 import validateFields from '../../utils/helpers/validate-req-body';
-import { prisma } from '../../prisma/client';
+import { prisma } from '../../../prisma/client';
 import { AppError } from '../../utils/AppError';
 import { generateResetToken, verifyResetToken } from '../../utils/resetToken';
 import crypto from 'crypto';
 import { Request, Response, NextFunction } from 'express';
-import { Config } from '../../config';
 
 class EmployerAuthController {
 	/**config
@@ -17,7 +16,11 @@ class EmployerAuthController {
 	 * @param {next} next
 	 * @returns
 	 */
-	static async signup(req: Request, res: Response, next: NextFunction) {
+	static async signup(
+		req: Request,
+		res: Response,
+		next: NextFunction
+	): Promise<any> {
 		validateFields(req, [
 			'email',
 			'password',
@@ -144,7 +147,7 @@ class EmployerAuthController {
 	 */
 	static async logout(req: Request, res: Response, next: NextFunction) {
 		try {
-			const empId: string = req.userId;
+			const empId = req.userId;
 			const authTokenKey = `auth:${empId}`;
 			await redisClient.del(authTokenKey);
 			await prisma.jobSeeker.update({
@@ -311,3 +314,5 @@ class EmployerAuthController {
 		});
 	}
 }
+
+export default EmployerAuthController;

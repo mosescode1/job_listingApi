@@ -2,11 +2,10 @@ import argon2 from 'argon2';
 import jwtFeatures from '../../utils/jwtFeature';
 import { redisClient } from '../../redis/redisClient';
 import validateFields from '../../utils/helpers/validate-req-body';
-import { prisma } from '../../prisma/client';
+import { prisma } from '../../../prisma/client';
 import { AppError } from '../../utils/AppError';
 import { verifyResetToken, generateResetToken } from '../../utils/resetToken';
 import crypto from 'crypto';
-import { Config } from '../../config';
 import { Response, Request, NextFunction } from 'express';
 
 class JobSeekerAuthController {
@@ -377,4 +376,4 @@ class JobSeekerAuthController {
 	}
 }
 
-module.exports = JobSeekerAuthController;
+export { JobSeekerAuthController };

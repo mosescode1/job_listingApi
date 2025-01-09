@@ -1,11 +1,6 @@
 import { AppError } from '../../utils/AppError';
 import { Config } from '../../config';
-import {
-	Response,
-	Request as ExpressRequest,
-	NextFunction,
-	ErrorRequestHandler,
-} from 'express';
+import { Response, ErrorRequestHandler } from 'express';
 
 const errProd = (err: any, res: Response) => {
 	// Operational errors we want to display to the client
