@@ -203,7 +203,7 @@ class JobSeekerController {
 			},
 
 			data: {
-				avatarUrl: req.file.path,
+				avatarUrl: req.file?.path,
 			},
 		});
 		res.status(200).json({
