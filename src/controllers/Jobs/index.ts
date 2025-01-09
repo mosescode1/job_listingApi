@@ -252,14 +252,6 @@ class JobController {
 
 		const { proposal, resumeUrl } = req.body;
 
-		// if (!userId)
-		// 	return next(
-		// 		new AppError({
-		// 			message: 'User with this id not found',
-		// 			statusCode: 404,
-		// 		})
-		// 	);
-
 		const jobseeker = await prisma.jobSeeker.findUnique({
 			where: {
 				id: userId,
