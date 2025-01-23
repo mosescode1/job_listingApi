@@ -252,9 +252,6 @@ class EmployerController {
 			where: {
 				id: userId,
 			},
-			omit: {
-				refreshToken: true,
-			},
 			include: {
 				address: true,
 				skills: true,
@@ -275,6 +272,9 @@ class EmployerController {
 				new AppError({ message: 'Applicant not found', statusCode: 404 })
 			);
 		}
+
+		(applicant.password as any) = undefined;
+		(applicant.refreshToken as any) = undefined;
 
 		res.status(200).json({
 			status: 'OK',

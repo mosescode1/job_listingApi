@@ -12,7 +12,8 @@
 		"start-db": "sudo service postgresql start",
 		"prisma-client": "npx prisma generate",
 		"start": "nodemon",
-		"dev": "nodemon"
+		"dev": "nodemon",
+		"render": "node ./build/server.js"
 	},
 	"author": "Eteng Moses, Temitope Abiodun",
 	"license": "ISC",

@@ -43,9 +43,6 @@ class JobSeekerController {
 			where: {
 				id: req.userId,
 			},
-			omit: {
-				refreshToken: true,
-			},
 			include: {
 				address: true,
 				skills: true,
@@ -60,6 +57,9 @@ class JobSeekerController {
 				new AppError({ message: 'Job seeker not found', statusCode: 404 })
 			);
 		}
+
+		(jobSeeker as any).password = undefined;
+		(jobSeeker as any).refreshToken = undefined;
 
 		res.status(200).json({
 			status: 'OK',
@@ -155,14 +155,14 @@ class JobSeekerController {
 
 		const applications = await prisma.application.findMany({
 			where: { jobSeekerId: userId },
-			omit: {
-				firstName: true,
-				lastName: true,
-				email: true,
-				phone: true,
-				updatedAt: true,
-				jobSeekerId: true,
-			},
+			// omit: {
+			// 	firstName: true,
+			// 	lastName: true,
+			// 	email: true,
+			// 	phone: true,
+			// 	updatedAt: true,
+			// 	jobSeekerId: true,
+			// },
 		});
 
 		if (!applications || applications.length === 0) {
