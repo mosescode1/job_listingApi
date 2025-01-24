@@ -33,3 +33,4 @@
 
 - **GET /job:** Search for available jobs with filters (e.g., title, location, salary range, pagination).
 - **GET /job/{id}:** Get details of a specific job posting.
+-
