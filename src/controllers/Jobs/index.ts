@@ -4,6 +4,7 @@ import ApiFeatures from '../../utils/apiFeatures';
 import validateFields from '../../utils/helpers/validate-req-body';
 import { Request, Response, NextFunction } from 'express';
 import { Prisma } from '@prisma/client';
+import { redisClient } from '../../redis/redisClient';
 
 class JobController {
 	/**
@@ -28,6 +29,15 @@ class JobController {
 			},
 		};
 
+		// Create cache key based on query parameters
+		const cacheKey = `jobs:active:page:${page}:limit:${limit}:sort:${req.query.sort || 'default'}:search:${req.query.search || 'none'}`;
+		
+		// Try to get from cache first
+		const cached = await redisClient.get(cacheKey);
+		if (cached) {
+			return res.status(200).json(JSON.parse(cached));
+		}
+
 		// Execute queries in parallel for better performance
 		const [jobs, jobcount] = await Promise.all([
 			prisma.job.findMany(activeJobsQuery),
@@ -39,7 +49,7 @@ class JobController {
 		const hasMore = page * limit < jobcount;
 		const nextPage = hasMore ? page + 1 : null;
 
-		res.status(200).json({
+		const response = {
 			status: 'success',
 			message: jobs.length ? 'All Jobs' : 'No Available Job',
 			total: jobcount,
@@ -47,7 +57,12 @@ class JobController {
 			data: jobs,
 			hasMore,
 			nextPage,
-		});
+		};
+
+		// Cache for 5 minutes (300 seconds) - shorter TTL for frequently changing data
+		await redisClient.set(cacheKey, JSON.stringify(response), 300);
+
+		res.status(200).json(response);
 	}
 
 	/**
@@ -73,8 +88,14 @@ class JobController {
 		validateFields(req, requiredFields);
 
 		const { jobCategory, ...data } = req.body;
+		
+		// Fetch only necessary employer fields
 		const employerDetails = await prisma.employer.findUnique({
 			where: { id: empId },
+			select: {
+				companyName: true,
+				companyDescription: true,
+			},
 		});
 
 		if (!employerDetails) {
@@ -95,6 +116,9 @@ class JobController {
 				jobCategory: true,
 			},
 		});
+
+		// Invalidate job listings cache when new job is created
+		await redisClient.del('jobs:active:page:1:limit:10:sort:default:search:none');
 
 		res.status(201).json({
 			status: 'OK',
@@ -204,6 +228,9 @@ class JobController {
 			},
 		});
 
+		// Invalidate job listings cache when job is updated
+		await redisClient.del('jobs:active:page:1:limit:10:sort:default:search:none');
+
 		res.status(200).json({
 			status: 'OK',
 			message: 'Job updated successfully.',
@@ -229,6 +256,10 @@ class JobController {
 				},
 			},
 		});
+
+		// Invalidate job listings cache when job is deleted
+		await redisClient.del('jobs:active:page:1:limit:10:sort:default:search:none');
+
 		res.status(204).json({
 			status: 'OK',
 			message: 'Message deleted successfully.',
@@ -417,7 +448,25 @@ class JobController {
 	static async JobCategories(req: Request, res: Response, _: NextFunction) {
 		const features = new ApiFeatures(req.query).sorting();
 		const queryOptions: Prisma.JobCategoryFindManyArgs = features.queryOptions;
+		
+		// Try to get categories from cache first
+		const cacheKey = 'job:categories';
+		const cached = await redisClient.get(cacheKey);
+		
+		if (cached) {
+			const categories = JSON.parse(cached);
+			return res.json({
+				status: 'success',
+				count: categories.length,
+				data: categories,
+			});
+		}
+
+		// Fetch from database if not cached
 		const categories = await prisma.jobCategory.findMany(queryOptions);
+		
+		// Cache for 1 hour (3600 seconds)
+		await redisClient.set(cacheKey, JSON.stringify(categories), 3600);
 
 		res.json({
 			status: 'success',

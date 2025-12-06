@@ -193,12 +193,10 @@ class JobSeekerController {
 	}
 
 	static async uploadPic(req: Request, res: Response) {
-		console.log(req);
 		const updated = await prisma.jobSeeker.update({
 			where: {
 				id: req.userId,
 			},
-
 			data: {
 				avatarUrl: req.file?.path,
 			},
