@@ -32,10 +32,16 @@ class JobController {
 		// Create cache key based on query parameters
 		const cacheKey = `jobs:active:page:${page}:limit:${limit}:sort:${req.query.sort || 'default'}:search:${req.query.search || 'none'}`;
 		
-		// Try to get from cache first
-		const cached = await redisClient.get(cacheKey);
-		if (cached) {
-			return res.status(200).json(JSON.parse(cached));
+		// Try to get from cache first with error handling
+		try {
+			const cached = await redisClient.get(cacheKey);
+			if (cached) {
+				const parsedCache = JSON.parse(cached);
+				return res.status(200).json(parsedCache);
+			}
+		} catch (error) {
+			// If cache fails, continue to database query
+			console.error('Cache retrieval error, falling back to database:', error);
 		}
 
 		// Execute queries in parallel for better performance
@@ -60,7 +66,12 @@ class JobController {
 		};
 
 		// Cache for 5 minutes (300 seconds) - shorter TTL for frequently changing data
-		await redisClient.set(cacheKey, JSON.stringify(response), 300);
+		try {
+			await redisClient.set(cacheKey, JSON.stringify(response), 300);
+		} catch (error) {
+			// Log cache set failure but don't fail the request
+			console.error('Cache set error:', error);
+		}
 
 		res.status(200).json(response);
 	}
@@ -118,7 +129,12 @@ class JobController {
 		});
 
 		// Invalidate all job listings cache when new job is created
-		await redisClient.delPattern('jobs:active:*');
+		try {
+			await redisClient.delPattern('jobs:active:*');
+		} catch (error) {
+			// Log cache invalidation failure but don't fail the request
+			console.error('Cache invalidation error:', error);
+		}
 
 		res.status(201).json({
 			status: 'OK',
@@ -229,7 +245,12 @@ class JobController {
 		});
 
 		// Invalidate all job listings cache when job is updated
-		await redisClient.delPattern('jobs:active:*');
+		try {
+			await redisClient.delPattern('jobs:active:*');
+		} catch (error) {
+			// Log cache invalidation failure but don't fail the request
+			console.error('Cache invalidation error:', error);
+		}
 
 		res.status(200).json({
 			status: 'OK',
@@ -258,7 +279,12 @@ class JobController {
 		});
 
 		// Invalidate all job listings cache when job is deleted
-		await redisClient.delPattern('jobs:active:*');
+		try {
+			await redisClient.delPattern('jobs:active:*');
+		} catch (error) {
+			// Log cache invalidation failure but don't fail the request
+			console.error('Cache invalidation error:', error);
+		}
 
 		res.status(204).json({
 			status: 'OK',
@@ -457,24 +483,33 @@ class JobController {
 		const features = new ApiFeatures(req.query).sorting();
 		const queryOptions: Prisma.JobCategoryFindManyArgs = features.queryOptions;
 		
-		// Try to get categories from cache first
+		// Try to get categories from cache first with error handling
 		const cacheKey = 'job:categories';
-		const cached = await redisClient.get(cacheKey);
-		
-		if (cached) {
-			const categories = JSON.parse(cached);
-			return res.json({
-				status: 'success',
-				count: categories.length,
-				data: categories,
-			});
+		try {
+			const cached = await redisClient.get(cacheKey);
+			if (cached) {
+				const categories = JSON.parse(cached);
+				return res.json({
+					status: 'success',
+					count: categories.length,
+					data: categories,
+				});
+			}
+		} catch (error) {
+			// If cache fails, continue to database query
+			console.error('Cache retrieval error, falling back to database:', error);
 		}
 
 		// Fetch from database if not cached
 		const categories = await prisma.jobCategory.findMany(queryOptions);
 		
 		// Cache for 1 hour (3600 seconds)
-		await redisClient.set(cacheKey, JSON.stringify(categories), 3600);
+		try {
+			await redisClient.set(cacheKey, JSON.stringify(categories), 3600);
+		} catch (error) {
+			// Log cache set failure but don't fail the request
+			console.error('Cache set error:', error);
+		}
 
 		res.json({
 			status: 'success',
