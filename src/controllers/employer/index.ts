@@ -78,9 +78,13 @@ class EmployerController {
 	 */
 
 	static async updateEmployer(req: Request, res: Response, next: NextFunction) {
+		// Only fetch email for validation (optimized query)
 		const employer = await prisma.employer.findUnique({
 			where: {
 				id: req.userId,
+			},
+			select: {
+				email: true,
 			},
 		});
 		if (!employer) {

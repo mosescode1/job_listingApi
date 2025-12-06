@@ -97,9 +97,13 @@ class JobSeekerController {
 		res: Response,
 		next: NextFunction
 	) {
+		// Only fetch email for validation (optimized query)
 		const jobSeeker = await prisma.jobSeeker.findUnique({
 			where: {
 				id: req.userId,
+			},
+			select: {
+				email: true,
 			},
 		});
 

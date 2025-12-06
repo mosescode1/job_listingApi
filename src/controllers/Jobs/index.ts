@@ -391,12 +391,26 @@ class JobController {
 			status = null;
 		}
 
-		const empJob = await prisma.job.findUnique({
-			where: {
-				id: jobId,
-				employerId: userId,
-			},
-		});
+		// Fetch job and application in parallel (optimized)
+		const [empJob, application] = await Promise.all([
+			prisma.job.findUnique({
+				where: {
+					id: jobId,
+					employerId: userId,
+				},
+				select: {
+					id: true,
+				},
+			}),
+			prisma.application.findUnique({
+				where: {
+					id: applicationId,
+				},
+				select: {
+					id: true,
+				},
+			}),
+		]);
 
 		if (!empJob)
 			return next(
@@ -406,13 +420,7 @@ class JobController {
 				})
 			);
 
-		const applicantion = await prisma.application.findUnique({
-			where: {
-				id: applicationId,
-			},
-		});
-
-		if (!applicantion)
+		if (!application)
 			return next(
 				new AppError({
 					message: 'Application with this id not found',

@@ -31,9 +31,13 @@ class EmployerAuthController {
 		const { email, password, companyName, companyAddress, companyDescription } =
 			req.body;
 
+		// Only check if employer exists (optimized query)
 		const findEmp = await prisma.employer.findUnique({
 			where: {
 				email: email,
+			},
+			select: {
+				id: true,
 			},
 		});
 

@@ -116,9 +116,13 @@ class JobSeekerAuthController {
 			yearsOfExperience,
 		} = req.body;
 
+		// Only check if user exists (optimized query)
 		const findUser = await prisma.jobSeeker.findUnique({
 			where: {
 				email: email,
+			},
+			select: {
+				id: true,
 			},
 		});
 
