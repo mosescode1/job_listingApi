@@ -157,6 +157,11 @@ model Job {
   applications               Application[]
   jobCategory                JobCategory[] @relation("Categories")
   SavedJob                   SavedJob[]
+
+  @@index([status])
+  @@index([employerId])
+  @@index([posted])
+  @@index([status, posted])
 }
 
 model JobCategory {
@@ -180,6 +185,12 @@ model Application {
   jobSeeker   JobSeeker         @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
   jobId       String
   job         Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobSeekerId])
+  @@index([jobId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([jobSeekerId, jobId])
 }
 
 // * ADMIN MODEL

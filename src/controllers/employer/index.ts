@@ -78,9 +78,13 @@ class EmployerController {
 	 */
 
 	static async updateEmployer(req: Request, res: Response, next: NextFunction) {
+		// Only fetch email for validation (optimized query)
 		const employer = await prisma.employer.findUnique({
 			where: {
 				id: req.userId,
+			},
+			select: {
+				email: true,
 			},
 		});
 		if (!employer) {
@@ -209,27 +213,31 @@ class EmployerController {
 				new AppError({ message: 'Job ID is required', statusCode: 404 })
 			);
 		}
-		const jobDetails = await prisma.job.findUnique({
+
+		// Fetch job with applicants in a single query (optimized)
+		const jobWithApplicants = await prisma.job.findUnique({
 			where: {
 				id: jobId,
 				employerId: empId,
 			},
+			select: {
+				title: true,
+				applications: true,
+			},
 		});
-		const applicants = await prisma.job
-			.findUnique({
-				where: {
-					id: jobId,
-					employerId: empId,
-				},
-			})
-			.applications();
+
+		if (!jobWithApplicants) {
+			return next(
+				new AppError({ message: 'Job not found', statusCode: 404 })
+			);
+		}
 
 		res.status(200).json({
 			status: 'success',
 			message: 'All applicants',
 			data: {
-				title: jobDetails ? jobDetails.title : 'unknown',
-				applicants,
+				title: jobWithApplicants.title,
+				applicants: jobWithApplicants.applications,
 			},
 		});
 	}
@@ -310,8 +318,8 @@ class EmployerController {
 
 		const empId = req.userId;
 
-		// * LOGIC
-		const [overview, applicantsPerMonth, jobCategoryData] = await Promise.all([
+		// Execute all queries in parallel for better performance
+		const [overview, applicantsPerMonth, jobCategoryData, averageSalaryPerMonth] = await Promise.all([
 			// NOTE: Fetch employer overview
 			prisma.employer.findUnique({
 				where: {
@@ -374,19 +382,19 @@ class EmployerController {
 					},
 				},
 			}),
-		]);
 
-		// TODO: Fetch the average salary per month
-		const averageSalaryPerMonth = await prisma.job.groupBy({
-			by: ['posted'], // Groups jobs by the 'posted' date
-			where: {
-				employerId: empId, // Filters jobs by the given employer ID
-			},
-			_max: {
-				averagePay: true,
-			},
-			_count: true,
-		});
+			// NOTE: Fetch the average salary per month (moved to parallel execution)
+			prisma.job.groupBy({
+				by: ['posted'], // Groups jobs by the 'posted' date
+				where: {
+					employerId: empId, // Filters jobs by the given employer ID
+				},
+				_max: {
+					averagePay: true,
+				},
+				_count: true,
+			}),
+		]);
 
 		// NOTE Processing the result
 		const monthlyApplicants = monthlyApplicantData(
@@ -394,8 +402,6 @@ class EmployerController {
 			monthNames
 		);
 		const averagePay = averageSalary(averageSalaryPerMonth, monthNames);
-
-		console.log(monthlyApplicants);
 
 		// * NOTE Total number of jobs posted by the employer
 

@@ -13,19 +13,33 @@ class JobSeekerController {
 	 */
 	static async allJobSeekers(req: Request, res: Response) {
 		const features = new ApiFeatures(req.query).pagination().sorting();
-		let users = await prisma.jobSeeker.findMany(
-			features.queryOptions as Prisma.JobSeekerFindManyArgs
-		);
+		// Exclude sensitive fields at query level for better performance
+		const users = await prisma.jobSeeker.findMany({
+			...(features.queryOptions as Prisma.JobSeekerFindManyArgs),
+			select: {
+				id: true,
+				email: true,
+				firstName: true,
+				lastName: true,
+				profession: true,
+				phone: true,
+				yearsOfExperience: true,
+				gender: true,
+				createdAt: true,
+				updatedAt: true,
+				cv: true,
+				bio: true,
+				resumeUrl: true,
+				avatarUrl: true,
+			},
+		});
 
 		res.status(200).json({
-			status: 'successs',
+			status: 'success',
 			message: 'All job seekers',
 			count: users.length,
 			data: {
-				users: users.filter((user) => {
-					(user as any).refreshToken = undefined;
-					return user;
-				}),
+				users,
 			},
 		});
 	}
@@ -83,9 +97,13 @@ class JobSeekerController {
 		res: Response,
 		next: NextFunction
 	) {
+		// Only fetch email for validation (optimized query)
 		const jobSeeker = await prisma.jobSeeker.findUnique({
 			where: {
 				id: req.userId,
+			},
+			select: {
+				email: true,
 			},
 		});
 
@@ -153,16 +171,16 @@ class JobSeekerController {
 	) {
 		const userId = req.userId;
 
+		// Fetch applications with job details in a single query (optimized)
 		const applications = await prisma.application.findMany({
 			where: { jobSeekerId: userId },
-			// omit: {
-			// 	firstName: true,
-			// 	lastName: true,
-			// 	email: true,
-			// 	phone: true,
-			// 	updatedAt: true,
-			// 	jobSeekerId: true,
-			// },
+			include: {
+				job: {
+					include: {
+						jobCategory: true,
+					},
+				},
+			},
 		});
 
 		if (!applications || applications.length === 0) {
@@ -171,37 +189,18 @@ class JobSeekerController {
 			);
 		}
 
-		// Fetch full job details for each application
-		const applicationsWithJobDetails = await Promise.all(
-			applications.map(async (application) => {
-				const jobDetails = await prisma.job.findUnique({
-					where: { id: application.jobId },
-					include: {
-						jobCategory: true,
-					},
-				});
-
-				return {
-					...application,
-					jobDetails,
-				};
-			})
-		);
-
 		res.status(200).json({
 			status: 'success',
 			message: 'all applications',
-			applications: applicationsWithJobDetails,
+			applications,
 		});
 	}
 
 	static async uploadPic(req: Request, res: Response) {
-		console.log(req);
 		const updated = await prisma.jobSeeker.update({
 			where: {
 				id: req.userId,
 			},
-
 			data: {
 				avatarUrl: req.file?.path,
 			},

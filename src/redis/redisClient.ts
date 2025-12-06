@@ -63,6 +63,29 @@ class RedisClient {
 			console.error(`Error deleting key ${key}: ${err.message}`);
 		}
 	}
+
+	async delPattern(pattern: string): Promise<void> {
+		try {
+			// Use SCAN instead of KEYS for better performance in production
+			const keys: string[] = [];
+			let cursor = 0;
+
+			do {
+				const result = await this.client.scan(cursor, {
+					MATCH: pattern,
+					COUNT: 100,
+				});
+				cursor = result.cursor;
+				keys.push(...result.keys);
+			} while (cursor !== 0);
+
+			if (keys.length > 0) {
+				await this.client.del(keys);
+			}
+		} catch (err: any) {
+			console.error(`Error deleting pattern ${pattern}: ${err.message}`);
+		}
+	}
 }
 const redisClient = new RedisClient();
 

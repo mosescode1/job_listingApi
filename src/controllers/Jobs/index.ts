@@ -4,6 +4,7 @@ import ApiFeatures from '../../utils/apiFeatures';
 import validateFields from '../../utils/helpers/validate-req-body';
 import { Request, Response, NextFunction } from 'express';
 import { Prisma } from '@prisma/client';
+import { redisClient } from '../../redis/redisClient';
 
 class JobController {
 	/**
@@ -28,16 +29,33 @@ class JobController {
 			},
 		};
 
-		const jobs = await prisma.job.findMany(activeJobsQuery);
+		// Create cache key based on query parameters
+		const cacheKey = `jobs:active:page:${page}:limit:${limit}:sort:${req.query.sort || 'default'}:search:${req.query.search || 'none'}`;
+		
+		// Try to get from cache first with error handling
+		try {
+			const cached = await redisClient.get(cacheKey);
+			if (cached) {
+				const parsedCache = JSON.parse(cached);
+				return res.status(200).json(parsedCache);
+			}
+		} catch (error) {
+			// If cache fails, continue to database query
+			console.error('Cache retrieval error, falling back to database:', error);
+		}
 
-		const jobcount = await prisma.job.count({
-			where: { status: 'Active' },
-		});
+		// Execute queries in parallel for better performance
+		const [jobs, jobcount] = await Promise.all([
+			prisma.job.findMany(activeJobsQuery),
+			prisma.job.count({
+				where: activeJobsQuery.where,
+			}),
+		]);
 
 		const hasMore = page * limit < jobcount;
 		const nextPage = hasMore ? page + 1 : null;
 
-		res.status(200).json({
+		const response = {
 			status: 'success',
 			message: jobs.length ? 'All Jobs' : 'No Available Job',
 			total: jobcount,
@@ -45,7 +63,17 @@ class JobController {
 			data: jobs,
 			hasMore,
 			nextPage,
-		});
+		};
+
+		// Cache for 5 minutes (300 seconds) - shorter TTL for frequently changing data
+		try {
+			await redisClient.set(cacheKey, JSON.stringify(response), 300);
+		} catch (error) {
+			// Log cache set failure but don't fail the request
+			console.error('Cache set error:', error);
+		}
+
+		res.status(200).json(response);
 	}
 
 	/**
@@ -71,8 +99,14 @@ class JobController {
 		validateFields(req, requiredFields);
 
 		const { jobCategory, ...data } = req.body;
+		
+		// Fetch only necessary employer fields
 		const employerDetails = await prisma.employer.findUnique({
 			where: { id: empId },
+			select: {
+				companyName: true,
+				companyDescription: true,
+			},
 		});
 
 		if (!employerDetails) {
@@ -94,6 +128,14 @@ class JobController {
 			},
 		});
 
+		// Invalidate all job listings cache when new job is created
+		try {
+			await redisClient.delPattern('jobs:active:*');
+		} catch (error) {
+			// Log cache invalidation failure but don't fail the request
+			console.error('Cache invalidation error:', error);
+		}
+
 		res.status(201).json({
 			status: 'OK',
 			message: 'Job posted successfully.',
@@ -111,12 +153,12 @@ class JobController {
 	 */
 	static async jobById(req: Request, res: Response, next: NextFunction) {
 		const jobId = req.params.jobId;
+		// Don't include all applications by default - only fetch job category
 		const job = await prisma.job.findUnique({
 			where: {
 				id: jobId,
 			},
 			include: {
-				applications: true,
 				jobCategory: true,
 			},
 		});
@@ -202,6 +244,14 @@ class JobController {
 			},
 		});
 
+		// Invalidate all job listings cache when job is updated
+		try {
+			await redisClient.delPattern('jobs:active:*');
+		} catch (error) {
+			// Log cache invalidation failure but don't fail the request
+			console.error('Cache invalidation error:', error);
+		}
+
 		res.status(200).json({
 			status: 'OK',
 			message: 'Job updated successfully.',
@@ -227,6 +277,15 @@ class JobController {
 				},
 			},
 		});
+
+		// Invalidate all job listings cache when job is deleted
+		try {
+			await redisClient.delPattern('jobs:active:*');
+		} catch (error) {
+			// Log cache invalidation failure but don't fail the request
+			console.error('Cache invalidation error:', error);
+		}
+
 		res.status(204).json({
 			status: 'OK',
 			message: 'Message deleted successfully.',
@@ -252,22 +311,38 @@ class JobController {
 
 		const { proposal, resumeUrl } = req.body;
 
-		const jobseeker = await prisma.jobSeeker.findUnique({
-			where: {
-				id: userId,
-			},
-		});
+		// Fetch jobseeker and job in parallel for better performance
+		const [jobseeker, job, applied] = await Promise.all([
+			prisma.jobSeeker.findUnique({
+				where: { id: userId },
+				select: {
+					id: true,
+					firstName: true,
+					lastName: true,
+					email: true,
+					phone: true,
+				},
+			}),
+			prisma.job.findUnique({
+				where: { id: jobId },
+				select: {
+					id: true,
+					status: true,
+				},
+			}),
+			prisma.application.findFirst({
+				where: {
+					jobSeekerId: userId,
+					jobId: jobId,
+				},
+				select: { id: true },
+			}),
+		]);
 
 		if (!jobseeker)
 			return next(
 				new AppError({ message: 'Jobseeker not found', statusCode: 404 })
 			);
-
-		const job = await prisma.job.findUnique({
-			where: {
-				id: jobId,
-			},
-		});
 
 		if (!job)
 			return next(new AppError({ message: 'Job not found', statusCode: 404 }));
@@ -281,13 +356,6 @@ class JobController {
 			);
 		}
 
-		const applied = await prisma.application.findFirst({
-			where: {
-				jobSeekerId: jobseeker.id,
-				jobId: jobId,
-			},
-		});
-
 		if (applied) {
 			return next(
 				new AppError({
@@ -297,30 +365,29 @@ class JobController {
 			);
 		}
 
-		//  NOTE: Increment the number of applicants for the job
-		await prisma.job.update({
-			where: {
-				id: jobId,
-			},
-			data: {
-				noOfApplicants: {
-					increment: 1,
+		// Create application and increment applicant count in a transaction
+		const [appliedJob] = await prisma.$transaction([
+			prisma.application.create({
+				data: {
+					firstName: jobseeker.firstName,
+					lastName: jobseeker.lastName,
+					email: jobseeker.email,
+					phone: jobseeker.phone,
+					proposal,
+					resumeUrl,
+					jobSeekerId: userId,
+					jobId: jobId,
 				},
-			},
-		});
-
-		const appliedJob = await prisma.application.create({
-			data: {
-				firstName: jobseeker.firstName,
-				lastName: jobseeker.lastName,
-				email: jobseeker.email,
-				phone: jobseeker.phone,
-				proposal,
-				resumeUrl,
-				jobSeekerId: userId,
-				jobId: jobId,
-			},
-		});
+			}),
+			prisma.job.update({
+				where: { id: jobId },
+				data: {
+					noOfApplicants: {
+						increment: 1,
+					},
+				},
+			}),
+		]);
 
 		res.status(201).json({
 			status: 'OK',
@@ -350,12 +417,26 @@ class JobController {
 			status = null;
 		}
 
-		const empJob = await prisma.job.findUnique({
-			where: {
-				id: jobId,
-				employerId: userId,
-			},
-		});
+		// Fetch job and application in parallel (optimized)
+		const [empJob, application] = await Promise.all([
+			prisma.job.findUnique({
+				where: {
+					id: jobId,
+					employerId: userId,
+				},
+				select: {
+					id: true,
+				},
+			}),
+			prisma.application.findUnique({
+				where: {
+					id: applicationId,
+				},
+				select: {
+					id: true,
+				},
+			}),
+		]);
 
 		if (!empJob)
 			return next(
@@ -365,13 +446,7 @@ class JobController {
 				})
 			);
 
-		const applicantion = await prisma.application.findUnique({
-			where: {
-				id: applicationId,
-			},
-		});
-
-		if (!applicantion)
+		if (!application)
 			return next(
 				new AppError({
 					message: 'Application with this id not found',
@@ -407,7 +482,34 @@ class JobController {
 	static async JobCategories(req: Request, res: Response, _: NextFunction) {
 		const features = new ApiFeatures(req.query).sorting();
 		const queryOptions: Prisma.JobCategoryFindManyArgs = features.queryOptions;
+		
+		// Try to get categories from cache first with error handling
+		const cacheKey = 'job:categories';
+		try {
+			const cached = await redisClient.get(cacheKey);
+			if (cached) {
+				const categories = JSON.parse(cached);
+				return res.json({
+					status: 'success',
+					count: categories.length,
+					data: categories,
+				});
+			}
+		} catch (error) {
+			// If cache fails, continue to database query
+			console.error('Cache retrieval error, falling back to database:', error);
+		}
+
+		// Fetch from database if not cached
 		const categories = await prisma.jobCategory.findMany(queryOptions);
+		
+		// Cache for 1 hour (3600 seconds)
+		try {
+			await redisClient.set(cacheKey, JSON.stringify(categories), 3600);
+		} catch (error) {
+			// Log cache set failure but don't fail the request
+			console.error('Cache set error:', error);
+		}
 
 		res.json({
 			status: 'success',
