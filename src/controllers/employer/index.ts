@@ -209,27 +209,31 @@ class EmployerController {
 				new AppError({ message: 'Job ID is required', statusCode: 404 })
 			);
 		}
-		const jobDetails = await prisma.job.findUnique({
+
+		// Fetch job with applicants in a single query (optimized)
+		const jobWithApplicants = await prisma.job.findUnique({
 			where: {
 				id: jobId,
 				employerId: empId,
 			},
+			select: {
+				title: true,
+				applications: true,
+			},
 		});
-		const applicants = await prisma.job
-			.findUnique({
-				where: {
-					id: jobId,
-					employerId: empId,
-				},
-			})
-			.applications();
+
+		if (!jobWithApplicants) {
+			return next(
+				new AppError({ message: 'Job not found', statusCode: 404 })
+			);
+		}
 
 		res.status(200).json({
 			status: 'success',
 			message: 'All applicants',
 			data: {
-				title: jobDetails ? jobDetails.title : 'unknown',
-				applicants,
+				title: jobWithApplicants.title,
+				applicants: jobWithApplicants.applications,
 			},
 		});
 	}

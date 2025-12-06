@@ -28,11 +28,13 @@ class JobController {
 			},
 		};
 
-		const jobs = await prisma.job.findMany(activeJobsQuery);
-
-		const jobcount = await prisma.job.count({
-			where: { status: 'Active' },
-		});
+		// Execute queries in parallel for better performance
+		const [jobs, jobcount] = await Promise.all([
+			prisma.job.findMany(activeJobsQuery),
+			prisma.job.count({
+				where: activeJobsQuery.where,
+			}),
+		]);
 
 		const hasMore = page * limit < jobcount;
 		const nextPage = hasMore ? page + 1 : null;
@@ -111,12 +113,12 @@ class JobController {
 	 */
 	static async jobById(req: Request, res: Response, next: NextFunction) {
 		const jobId = req.params.jobId;
+		// Don't include all applications by default - only fetch job category
 		const job = await prisma.job.findUnique({
 			where: {
 				id: jobId,
 			},
 			include: {
-				applications: true,
 				jobCategory: true,
 			},
 		});
@@ -252,22 +254,38 @@ class JobController {
 
 		const { proposal, resumeUrl } = req.body;
 
-		const jobseeker = await prisma.jobSeeker.findUnique({
-			where: {
-				id: userId,
-			},
-		});
+		// Fetch jobseeker and job in parallel for better performance
+		const [jobseeker, job, applied] = await Promise.all([
+			prisma.jobSeeker.findUnique({
+				where: { id: userId },
+				select: {
+					id: true,
+					firstName: true,
+					lastName: true,
+					email: true,
+					phone: true,
+				},
+			}),
+			prisma.job.findUnique({
+				where: { id: jobId },
+				select: {
+					id: true,
+					status: true,
+				},
+			}),
+			prisma.application.findFirst({
+				where: {
+					jobSeekerId: userId,
+					jobId: jobId,
+				},
+				select: { id: true },
+			}),
+		]);
 
 		if (!jobseeker)
 			return next(
 				new AppError({ message: 'Jobseeker not found', statusCode: 404 })
 			);
-
-		const job = await prisma.job.findUnique({
-			where: {
-				id: jobId,
-			},
-		});
 
 		if (!job)
 			return next(new AppError({ message: 'Job not found', statusCode: 404 }));
@@ -281,13 +299,6 @@ class JobController {
 			);
 		}
 
-		const applied = await prisma.application.findFirst({
-			where: {
-				jobSeekerId: jobseeker.id,
-				jobId: jobId,
-			},
-		});
-
 		if (applied) {
 			return next(
 				new AppError({
@@ -297,30 +308,29 @@ class JobController {
 			);
 		}
 
-		//  NOTE: Increment the number of applicants for the job
-		await prisma.job.update({
-			where: {
-				id: jobId,
-			},
-			data: {
-				noOfApplicants: {
-					increment: 1,
+		// Create application and increment applicant count in a transaction
+		const [appliedJob] = await prisma.$transaction([
+			prisma.application.create({
+				data: {
+					firstName: jobseeker.firstName,
+					lastName: jobseeker.lastName,
+					email: jobseeker.email,
+					phone: jobseeker.phone,
+					proposal,
+					resumeUrl,
+					jobSeekerId: userId,
+					jobId: jobId,
 				},
-			},
-		});
-
-		const appliedJob = await prisma.application.create({
-			data: {
-				firstName: jobseeker.firstName,
-				lastName: jobseeker.lastName,
-				email: jobseeker.email,
-				phone: jobseeker.phone,
-				proposal,
-				resumeUrl,
-				jobSeekerId: userId,
-				jobId: jobId,
-			},
-		});
+			}),
+			prisma.job.update({
+				where: { id: jobId },
+				data: {
+					noOfApplicants: {
+						increment: 1,
+					},
+				},
+			}),
+		]);
 
 		res.status(201).json({
 			status: 'OK',

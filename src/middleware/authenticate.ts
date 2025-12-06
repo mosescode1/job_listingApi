@@ -48,9 +48,13 @@ const protect = async (req: Request, _: Response, next: NextFunction) => {
 		);
 	}
 
+	// Only fetch id to verify user exists (optimized query)
 	const jobseeker = await prisma.jobSeeker.findUnique({
 		where: {
 			id: decoded.id,
+		},
+		select: {
+			id: true,
 		},
 	});
 
@@ -63,7 +67,6 @@ const protect = async (req: Request, _: Response, next: NextFunction) => {
 		);
 
 	req.userId = decoded.id;
-	console.log(req.userId);
 
 	//req.app.locals.userId = decoded.id;// set userId in app.locals
 	next();
@@ -103,9 +106,13 @@ const empProtect = async (req: Request, _: Response, next: NextFunction) => {
 		);
 	}
 
+	// Only fetch id to verify user exists (optimized query)
 	const emp = await prisma.employer.findUnique({
 		where: {
 			id: decoded.id,
+		},
+		select: {
+			id: true,
 		},
 	});
 
