@@ -35,7 +35,7 @@ class JobSeekerController {
 		});
 
 		res.status(200).json({
-			status: 'successs',
+			status: 'success',
 			message: 'All job seekers',
 			count: users.length,
 			data: {

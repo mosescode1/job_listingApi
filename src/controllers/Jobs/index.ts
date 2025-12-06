@@ -117,8 +117,8 @@ class JobController {
 			},
 		});
 
-		// Invalidate job listings cache when new job is created
-		await redisClient.del('jobs:active:page:1:limit:10:sort:default:search:none');
+		// Invalidate all job listings cache when new job is created
+		await redisClient.delPattern('jobs:active:*');
 
 		res.status(201).json({
 			status: 'OK',
@@ -228,8 +228,8 @@ class JobController {
 			},
 		});
 
-		// Invalidate job listings cache when job is updated
-		await redisClient.del('jobs:active:page:1:limit:10:sort:default:search:none');
+		// Invalidate all job listings cache when job is updated
+		await redisClient.delPattern('jobs:active:*');
 
 		res.status(200).json({
 			status: 'OK',
@@ -257,8 +257,8 @@ class JobController {
 			},
 		});
 
-		// Invalidate job listings cache when job is deleted
-		await redisClient.del('jobs:active:page:1:limit:10:sort:default:search:none');
+		// Invalidate all job listings cache when job is deleted
+		await redisClient.delPattern('jobs:active:*');
 
 		res.status(204).json({
 			status: 'OK',

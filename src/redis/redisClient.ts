@@ -63,6 +63,17 @@ class RedisClient {
 			console.error(`Error deleting key ${key}: ${err.message}`);
 		}
 	}
+
+	async delPattern(pattern: string): Promise<void> {
+		try {
+			const keys = await this.client.keys(pattern);
+			if (keys.length > 0) {
+				await this.client.del(keys);
+			}
+		} catch (err: any) {
+			console.error(`Error deleting pattern ${pattern}: ${err.message}`);
+		}
+	}
 }
 const redisClient = new RedisClient();
 
